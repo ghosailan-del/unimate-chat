@@ -36,9 +36,13 @@ padding:0;
 overflow:hidden;
 }
 
+/* MAIN */
+
 .main{
 flex:1;
 width:100%;
+display:flex;
+flex-direction:column;
 transition:0.3s;
 }
 
@@ -117,13 +121,7 @@ font-size:13px;
 opacity:.7;
 }
 
-/* MAIN */
-
-.main{
-flex:1;
-display:flex;
-flex-direction:column;
-}
+/* HEADER */
 
 .header{
 height:90px;
@@ -140,18 +138,12 @@ font-size:26px;
 cursor:pointer;
 }
 
-.header-badge{
-display:flex;
-align-items:center;
-justify-content:center;
-background:none;
-}
-
 .header-badge img{
 height:65px;
-width:auto;
 object-fit:contain;
 }
+
+/* CHAT */
 
 .messages{
 flex:1;
@@ -168,20 +160,17 @@ gap:10px;
 }
 
 .bot-avatar{
-  width:40px;
-  height:40px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  background:transparent;
+width:40px;
+height:40px;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .bot-avatar img{
-  width:40px;
-  height:auto;
-  object-fit:contain;
+width:40px;
 }
+
 .bot-bubble{
 background:white;
 padding:14px 18px;
@@ -248,10 +237,9 @@ box-shadow:0 0 25px rgba(120,92,255,.4);
 }
 
 #avatarVideo{
-width:120%;
-height:120%;
+width:100%;
+height:100%;
 object-fit:cover;
-transform:translate(-10%,-5%);
 }
 
 </style>
@@ -291,7 +279,7 @@ transform:translate(-10%,-5%);
 <div class="menu-icon" onclick="toggleSidebar()">☰</div>
 
 <div class="header-badge">
-<img src="<./UPM11.png">
+<img src="./UPM11.png">
 </div>
 
 <div>
@@ -309,9 +297,9 @@ UPM University
 
 <input id="input" placeholder="Ask your academic advisor...">
 
-<button class="sound-btn" id="soundBtn">🔊</button>
+<button class="sound-btn" id="soundBtn">🎤</button>
 
-<button class="send-btn" onclick="send()">➤</button>
+<button class="send-btn" id="sendBtn" onclick="send()">➤</button>
 
 </div>
 
@@ -325,11 +313,12 @@ UPM University
 
 <script>
 
-const API_KEY="Z2hvc2FpbGFuQGdtYWlsLmNvbQ:f4xZ46n7pzio6yyqbid67"
-
 const messages=document.getElementById("messages")
 const input=document.getElementById("input")
 const avatarVideo=document.getElementById("avatarVideo")
+const sendBtn=document.getElementById("sendBtn")
+
+let sending=false
 
 /* SIDEBAR */
 
@@ -346,7 +335,7 @@ const history=document.getElementById("history")
 const item=document.createElement("div")
 item.className="history-item"
 
-item.innerHTML=text+"<span class='time'>"+formatTime()+"</span>"
+item.innerHTML=text.slice(0,40)+"<span class='time'>"+formatTime()+"</span>"
 
 history.prepend(item)
 
@@ -383,6 +372,8 @@ row.appendChild(bubble)
 
 messages.appendChild(row)
 
+messages.scrollTop=messages.scrollHeight
+
 }
 
 /* USER MESSAGE */
@@ -394,6 +385,8 @@ bubble.className="user"
 bubble.textContent=text
 
 messages.appendChild(bubble)
+
+messages.scrollTop=messages.scrollHeight
 
 }
 
@@ -411,20 +404,22 @@ generateAvatar(welcome)
 
 }
 
-
 /* SEND */
 
 async function send(){
 
+if(sending) return
+
 const text = input.value.trim()
 if(!text) return
+
+sending=true
+sendBtn.textContent="..."
 
 addUserMessage(text)
 addHistory(text)
 
 input.value=""
-
-/* إرسال الرسالة إلى n8n */
 
 try{
 
@@ -442,8 +437,6 @@ message:text
 
 const data = await res.json()
 
-/* استخراج الرد القادم من الشات */
-
 const reply =
 data.output ||
 data.answer ||
@@ -452,8 +445,6 @@ data.text ||
 "Sorry, I couldn't get a response."
 
 addBotMessage(reply)
-
-/* تشغيل الأفاتار بنفس الرد */
 
 generateAvatar(reply)
 
@@ -465,7 +456,11 @@ addBotMessage("Connection error with the AI service.")
 
 }
 
+sendBtn.textContent="➤"
+sending=false
+
 }
+
 /* ENTER SEND */
 
 input.addEventListener("keydown",(e)=>{
@@ -473,6 +468,30 @@ input.addEventListener("keydown",(e)=>{
 if(e.key==="Enter") send()
 
 })
+
+/* SPEECH INPUT */
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+
+if(SpeechRecognition){
+
+const recognition = new SpeechRecognition()
+
+recognition.lang="en-US"
+
+document.getElementById("soundBtn").onclick=()=>{
+
+recognition.start()
+
+}
+
+recognition.onresult=(event)=>{
+
+input.value=event.results[0][0].transcript
+
+}
+
+}
 
 /* STUDENT LOGIN */
 
@@ -493,7 +512,6 @@ localStorage.setItem("studentID",id)
 
 document.getElementById("studentName").textContent=name
 document.getElementById("studentID").textContent="Student ID: "+id
-
 document.getElementById("avatarInitial").textContent=name[0]
 
 }
@@ -501,6 +519,8 @@ document.getElementById("avatarInitial").textContent=name[0]
 /* AVATAR */
 
 async function generateAvatar(text){
+
+try{
 
 const res=await fetch("http://localhost:3001/talk",{
 method:"POST",
@@ -512,29 +532,32 @@ const data=await res.json()
 
 checkVideo(data.id)
 
+}catch(e){
+console.log("Avatar error")
+}
+
 }
 
 async function checkVideo(id){
 
 let ready=false
+let tries=0
 
-while(!ready){
+while(!ready && tries<20){
 
-const res=await fetch(`https://api.d-id.com/talks/${id}`,{
-headers:{Authorization:`Basic ${btoa(API_KEY+":")}`}
-})
+const res=await fetch(`https://api.d-id.com/talks/${id}`)
 
 const data=await res.json()
 
 if(data.status==="done"){
 
 avatarVideo.src=data.result_url
-
 avatarVideo.play()
-
 ready=true
 
 }
+
+tries++
 
 await new Promise(r=>setTimeout(r,2000))
 
@@ -560,4 +583,3 @@ generateAvatar(welcome)
 
 </body>
 </html>
-
