@@ -426,6 +426,8 @@ input.value=""
 
 /* إرسال الرسالة إلى n8n */
 
+try{
+
 const res = await fetch(
 "https://ghaidaa2001.app.n8n.cloud/webhook/9709f789-eb90-43f8-915d-99220c961b0c/chat",
 {
@@ -454,6 +456,14 @@ addBotMessage(reply)
 /* تشغيل الأفاتار بنفس الرد */
 
 generateAvatar(reply)
+
+}catch(err){
+
+console.error(err)
+
+addBotMessage("Connection error with the AI service.")
+
+}
 
 }
 /* ENTER SEND */
