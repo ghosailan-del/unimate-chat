@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>UniMate Academic Advisor</title>
 
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
 <style>
 
 *{box-sizing:border-box}
@@ -234,12 +236,7 @@ height:130px;
 border-radius:50%;
 overflow:hidden;
 box-shadow:0 0 25px rgba(120,92,255,.4);
-}
-
-#avatarVideo{
-width:100%;
-height:100%;
-object-fit:cover;
+background:white;
 }
 
 </style>
@@ -307,26 +304,31 @@ UPM University
 
 </main>
 
+<!-- 3D ROBOT -->
+
 <div class="avatar-box">
-<video id="avatarVideo" playsinline></video>
+
+<model-viewer
+src="miibot_3d_model.glb"
+auto-rotate
+camera-controls
+shadow-intensity="1"
+style="width:100%;height:100%;">
+</model-viewer>
+
 </div>
 
 <script>
 
 const messages=document.getElementById("messages")
 const input=document.getElementById("input")
-const avatarVideo=document.getElementById("avatarVideo")
 const sendBtn=document.getElementById("sendBtn")
 
 let sending=false
 
-/* SIDEBAR */
-
 function toggleSidebar(){
 document.querySelector(".sidebar").classList.toggle("closed")
 }
-
-/* HISTORY */
 
 function addHistory(text){
 
@@ -341,14 +343,10 @@ history.prepend(item)
 
 }
 
-/* TIME */
-
 function formatTime(){
 const now=new Date()
 return now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
 }
-
-/* BOT MESSAGE */
 
 function addBotMessage(text){
 
@@ -376,8 +374,6 @@ messages.scrollTop=messages.scrollHeight
 
 }
 
-/* USER MESSAGE */
-
 function addUserMessage(text){
 
 const bubble=document.createElement("div")
@@ -390,8 +386,6 @@ messages.scrollTop=messages.scrollHeight
 
 }
 
-/* NEW CHAT */
-
 function newChat(){
 
 messages.innerHTML=""
@@ -400,11 +394,7 @@ const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you toda
 
 addBotMessage(welcome)
 
-generateAvatar(welcome)
-
 }
-
-/* SEND */
 
 async function send(){
 
@@ -446,8 +436,6 @@ data.text ||
 
 addBotMessage(reply)
 
-generateAvatar(reply)
-
 }catch(err){
 
 console.error(err)
@@ -461,15 +449,9 @@ sending=false
 
 }
 
-/* ENTER SEND */
-
 input.addEventListener("keydown",(e)=>{
-
 if(e.key==="Enter") send()
-
 })
-
-/* SPEECH INPUT */
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
 
@@ -480,20 +462,14 @@ const recognition = new SpeechRecognition()
 recognition.lang="en-US"
 
 document.getElementById("soundBtn").onclick=()=>{
-
 recognition.start()
-
 }
 
 recognition.onresult=(event)=>{
-
 input.value=event.results[0][0].transcript
-
 }
 
 }
-
-/* STUDENT LOGIN */
 
 function askStudent(){
 
@@ -516,57 +492,6 @@ document.getElementById("avatarInitial").textContent=name[0]
 
 }
 
-/* AVATAR */
-
-async function generateAvatar(text){
-
-try{
-
-const res=await fetch("http://localhost:3001/talk",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({text})
-})
-
-const data=await res.json()
-
-checkVideo(data.id)
-
-}catch(e){
-console.log("Avatar error")
-}
-
-}
-
-async function checkVideo(id){
-
-let ready=false
-let tries=0
-
-while(!ready && tries<20){
-
-const res=await fetch(`https://api.d-id.com/talks/${id}`)
-
-const data=await res.json()
-
-if(data.status==="done"){
-
-avatarVideo.src=data.result_url
-avatarVideo.play()
-ready=true
-
-}
-
-tries++
-
-await new Promise(r=>setTimeout(r,2000))
-
-}
-
-}
-
-/* ON LOAD */
-
 window.addEventListener("load",()=>{
 
 askStudent()
@@ -574,8 +499,6 @@ askStudent()
 const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
 
 addBotMessage(welcome)
-
-generateAvatar(welcome)
 
 })
 
