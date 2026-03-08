@@ -478,8 +478,6 @@ message:text
 
 const data = await res.json()
 
-/* TEXT RESPONSE FROM AI */
-
 const reply =
 data.output ||
 data.answer ||
@@ -489,12 +487,12 @@ data.text ||
 
 addBotMessage(reply)
 
-/* PLAY AUDIO IF PROVIDED */
+/* play voice if audio returned */
 
-if(data.audio && soundEnabled){
+if(data.audio){
 
-audioPlayer.src = data.audio
-audioPlayer.play()
+const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`)
+audio.play()
 
 }
 
@@ -556,3 +554,4 @@ addBotMessage(welcome)
 
 </body>
 </html>
+
