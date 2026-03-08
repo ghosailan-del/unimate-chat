@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <title>UniMate Academic Advisor</title>
 
+<!-- 3D model viewer library -->
 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
 <style>
+
+/* BASIC RESET */
 
 *{box-sizing:border-box}
 
@@ -208,6 +211,8 @@ padding:0 15px;
 font-size:16px;
 }
 
+/* BUTTONS */
+
 .sound-btn,.send-btn{
 width:55px;
 border:none;
@@ -244,6 +249,8 @@ background:white;
 
 <body>
 
+<!-- SIDEBAR -->
+
 <aside class="sidebar">
 
 <div class="sidebar-top">
@@ -268,6 +275,8 @@ background:white;
 </div>
 
 </aside>
+
+<!-- MAIN AREA -->
 
 <main class="main">
 
@@ -294,7 +303,8 @@ UPM University
 
 <input id="input" placeholder="Ask your academic advisor...">
 
-<button class="sound-btn" id="soundBtn">🎤</button>
+<!-- SOUND TOGGLE BUTTON -->
+<button class="sound-btn" id="soundBtn">🔊</button>
 
 <button class="send-btn" id="sendBtn" onclick="send()">➤</button>
 
@@ -320,15 +330,32 @@ style="width:100%;height:100%;">
 
 <script>
 
+/* DOM ELEMENTS */
+
 const messages=document.getElementById("messages")
 const input=document.getElementById("input")
 const sendBtn=document.getElementById("sendBtn")
+const soundBtn=document.getElementById("soundBtn")
+
+/* AUDIO PLAYER FOR ROBOT VOICE */
+
+let audioPlayer = new Audio()
+
+/* SOUND STATE */
+
+let soundEnabled = true
+
+/* MESSAGE LOCK */
 
 let sending=false
+
+/* SIDEBAR TOGGLE */
 
 function toggleSidebar(){
 document.querySelector(".sidebar").classList.toggle("closed")
 }
+
+/* CHAT HISTORY */
 
 function addHistory(text){
 
@@ -343,10 +370,14 @@ history.prepend(item)
 
 }
 
+/* TIME FORMAT */
+
 function formatTime(){
 const now=new Date()
 return now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
 }
+
+/* BOT MESSAGE */
 
 function addBotMessage(text){
 
@@ -374,6 +405,8 @@ messages.scrollTop=messages.scrollHeight
 
 }
 
+/* USER MESSAGE */
+
 function addUserMessage(text){
 
 const bubble=document.createElement("div")
@@ -386,6 +419,8 @@ messages.scrollTop=messages.scrollHeight
 
 }
 
+/* NEW CHAT */
+
 function newChat(){
 
 messages.innerHTML=""
@@ -395,6 +430,22 @@ const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you toda
 addBotMessage(welcome)
 
 }
+
+/* SOUND TOGGLE */
+
+soundBtn.onclick=()=>{
+
+soundEnabled=!soundEnabled
+
+soundBtn.textContent = soundEnabled ? "🔊" : "🔇"
+
+if(!soundEnabled){
+audioPlayer.pause()
+}
+
+}
+
+/* SEND MESSAGE TO n8n */
 
 async function send(){
 
@@ -427,6 +478,8 @@ message:text
 
 const data = await res.json()
 
+/* TEXT RESPONSE FROM AI */
+
 const reply =
 data.output ||
 data.answer ||
@@ -435,6 +488,15 @@ data.text ||
 "Sorry, I couldn't get a response."
 
 addBotMessage(reply)
+
+/* PLAY AUDIO IF PROVIDED */
+
+if(data.audio && soundEnabled){
+
+audioPlayer.src = data.audio
+audioPlayer.play()
+
+}
 
 }catch(err){
 
@@ -449,27 +511,13 @@ sending=false
 
 }
 
+/* ENTER TO SEND */
+
 input.addEventListener("keydown",(e)=>{
 if(e.key==="Enter") send()
 })
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-
-if(SpeechRecognition){
-
-const recognition = new SpeechRecognition()
-
-recognition.lang="en-US"
-
-document.getElementById("soundBtn").onclick=()=>{
-recognition.start()
-}
-
-recognition.onresult=(event)=>{
-input.value=event.results[0][0].transcript
-}
-
-}
+/* STUDENT LOGIN */
 
 function askStudent(){
 
@@ -491,6 +539,8 @@ document.getElementById("studentID").textContent="Student ID: "+id
 document.getElementById("avatarInitial").textContent=name[0]
 
 }
+
+/* PAGE LOAD */
 
 window.addEventListener("load",()=>{
 
