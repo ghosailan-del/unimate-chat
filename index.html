@@ -479,19 +479,15 @@ headers:{
 "Content-Type":"application/json"
 },
 body: JSON.stringify({
-message: text,
+chatInput: text,
 sessionId: sessionId
 })
 })
 
 const data = await res.json()
 
-const reply =
-data.output ||
-data.answer ||
-data.response ||
-data.text ||
-"Sorry, I couldn't get a response."
+const reply = data.output || "Sorry, I couldn't get a response."
+
 
 addBotMessage(reply)
 
@@ -499,8 +495,13 @@ addBotMessage(reply)
 
 if(data.audio){
 
-const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`)
-audio.play()
+const audio = new Audio("data:audio/mp3;base64," + data.audio)
+audio.preload = "auto"
+audioPlayer = audio
+
+if(soundEnabled){
+audio.play().catch(()=>{})
+}
 
 }
 
@@ -562,6 +563,7 @@ addBotMessage(welcome)
 
 </body>
 </html>
+
 
 
 
