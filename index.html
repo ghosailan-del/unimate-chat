@@ -246,9 +246,8 @@ background:white;
 
 </style>
 </head>
-
 <body>
-
+<audio id="ttsAudio"></audio>
 <!-- SIDEBAR -->
 
 <aside class="sidebar">
@@ -487,19 +486,21 @@ sessionId: sessionId
 const data = await res.json()
 
 const reply = data.output || "Sorry, I couldn't get a response."
-
 addBotMessage(reply)
 
 /* play voice */
 
-if(data.audio){
+if(data.audio && soundEnabled){
 
-const audio = new Audio("data:audio/mp3;base64," + data.audio)
-audio.preload = "auto"
-audioPlayer = audio
+const audioElement = document.getElementById("ttsAudio")
 
-if(soundEnabled){
-audio.play().catch(()=>{})
+audioElement.src = "data:audio/mp3;base64," + data.audio
+audioElement.load()
+
+audioElement.play().catch(err=>{
+console.log("Audio play error:", err)
+})
+
 }
 
 }
@@ -564,6 +565,7 @@ addBotMessage(welcome)
 
 </body>
 </html>
+
 
 
 
