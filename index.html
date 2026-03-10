@@ -460,13 +460,13 @@ if(sending) return
 const text = input.value.trim()
 if(!text) return
 
-sending=true
-sendBtn.textContent="..."
+sending = true
+sendBtn.textContent = "..."
 
 addUserMessage(text)
 addHistory(text)
 
-input.value=""
+input.value = ""
 
 try{
 
@@ -503,14 +503,9 @@ console.log("Audio play error:", err)
 
 }
 
-}
-
-}
-
-catch(err){
+}catch(err){
 
 console.error(err)
-
 addBotMessage("Connection error with the AI service.")
 
 }
@@ -565,6 +560,7 @@ addBotMessage(welcome)
 
 </body>
 </html>
+
 
 
 
