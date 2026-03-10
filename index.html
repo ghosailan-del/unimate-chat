@@ -486,23 +486,22 @@ sessionId: sessionId
 
 const data = await res.json()
 
-const reply =
-data.output ||
-data.json?.output ||
-"Sorry, I couldn't get a response."
+const reply = data.output || "Sorry, I couldn't get a response."
 
 addBotMessage(reply)
 
-/* play voice if audio returned */
+/* play voice */
 
-if(data.binary && data.binary.data){
+if(data.audio){
 
-const audio = new Audio("data:audio/mp3;base64," + data.binary.data)
+const audio = new Audio("data:audio/mp3;base64," + data.audio)
 audio.preload = "auto"
 audioPlayer = audio
 
 if(soundEnabled){
 audio.play().catch(()=>{})
+}
+
 }
 
 }
@@ -565,6 +564,7 @@ addBotMessage(welcome)
 
 </body>
 </html>
+
 
 
 
