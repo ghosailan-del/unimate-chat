@@ -232,7 +232,7 @@ background:#d4af57;
 </style>
 </head>
 <body>
-<audio id="ttsAudio"></audio>
+
 <!-- SIDEBAR -->
 
 <aside class="sidebar">
@@ -287,8 +287,6 @@ UPM University
 
 <input id="input" placeholder="Ask your academic advisor...">
 
-<!-- SOUND TOGGLE BUTTON -->
-<button class="sound-btn" id="soundBtn">🔊</button>
 
 <button class="send-btn" id="sendBtn" onclick="send()">➤</button>
 
@@ -306,7 +304,7 @@ UPM University
 const messages=document.getElementById("messages")
 const input=document.getElementById("input")
 const sendBtn=document.getElementById("sendBtn")
-const soundBtn=document.getElementById("soundBtn")
+
 
   // create or load session id
 let sessionId = localStorage.getItem("chat_session_id");
@@ -319,13 +317,6 @@ if(!sessionId){
   sessionId = "session-" + Math.random().toString(36).substring(2,10);
   localStorage.setItem("chat_session_id", sessionId);
 }
-/* AUDIO PLAYER FOR ROBOT VOICE */
-
-let audioPlayer = new Audio()
-
-/* SOUND STATE */
-
-let soundEnabled = true
 
 /* MESSAGE LOCK */
 
@@ -428,19 +419,6 @@ addBotMessage(welcome)
 
 }
 
-/* SOUND TOGGLE */
-
-soundBtn.onclick=()=>{
-
-soundEnabled=!soundEnabled
-
-soundBtn.textContent = soundEnabled ? "🔊" : "🔇"
-
-if(!soundEnabled){
-audioPlayer.pause()
-}
-
-}
 
 /* SEND MESSAGE TO n8n */
 
@@ -479,20 +457,7 @@ const data = await res.json()
 const reply = data.output || "Sorry, I couldn't get a response."
 addBotMessage(reply)
 
-/* play voice */
 
-if(data.audio && soundEnabled){
-
-const audioElement = document.getElementById("ttsAudio")
-
-audioElement.src = "data:audio/mp3;base64," + data.audio
-audioElement.load()
-
-audioElement.play().catch(err=>{
-console.log("Audio play error:", err)
-})
-
-}
 
 }catch(err){
 
