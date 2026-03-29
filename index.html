@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <title>UniMate Academic Advisor</title>
 
-<!-- 3D model viewer library -->
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
 <style>
 
@@ -230,19 +228,6 @@ color:white;
 background:#d4af57;
 }
 
-/* AVATAR */
-
-.avatar-box{
-position:fixed;
-right:30px;
-bottom:110px;
-width:130px;
-height:130px;
-border-radius:50%;
-overflow:hidden;
-box-shadow:0 0 25px rgba(120,92,255,.4);
-background:white;
-}
 
 </style>
 </head>
@@ -313,19 +298,6 @@ UPM University
 
 </main>
 
-<!-- 3D ROBOT -->
-
-<div class="avatar-box">
-
-<model-viewer
-src="miibot_3d_model.glb"
-auto-rotate
-camera-controls
-shadow-intensity="1"
-style="width:100%;height:100%;">
-</model-viewer>
-
-</div>
 
 <script>
 
@@ -339,6 +311,10 @@ const soundBtn=document.getElementById("soundBtn")
   // create or load session id
 let sessionId = localStorage.getItem("chat_session_id");
 
+  // ===== Chat History Variables =====
+let chatHistory = []
+let currentUserId = ""
+  
 if(!sessionId){
   sessionId = "session-" + Math.random().toString(36).substring(2,10);
   localStorage.setItem("chat_session_id", sessionId);
@@ -385,7 +361,8 @@ return now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
 
 /* BOT MESSAGE */
 
-function addBotMessage(text){
+function addBotMessage(text, save = true){
+
 
 const row=document.createElement("div")
 row.className="bot-row"
@@ -398,6 +375,7 @@ img.src="logo.png"
 
 avatar.appendChild(img)
 
+
 const bubble=document.createElement("div")
 bubble.className="bot-bubble"
 bubble.textContent=text
@@ -406,22 +384,32 @@ row.appendChild(avatar)
 row.appendChild(bubble)
 
 messages.appendChild(row)
-
 messages.scrollTop=messages.scrollHeight
+
+
+if(save){
+  chatHistory.push({type:"bot", text:text})
+  localStorage.setItem("chat_" + currentUserId, JSON.stringify(chatHistory))
+}
 
 }
 
 /* USER MESSAGE */
 
-function addUserMessage(text){
+function addUserMessage(text, save = true){
+
 
 const bubble=document.createElement("div")
 bubble.className="user"
 bubble.textContent=text
 
 messages.appendChild(bubble)
-
 messages.scrollTop=messages.scrollHeight
+
+if(save){
+  chatHistory.push({type:"user", text:text})
+  localStorage.setItem("chat_" + currentUserId, JSON.stringify(chatHistory))
+}
 
 }
 
@@ -431,8 +419,11 @@ function newChat(){
 
 messages.innerHTML=""
 
-const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
 
+chatHistory = []
+localStorage.removeItem("chat_" + currentUserId)
+
+const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
 addBotMessage(welcome)
 
 }
@@ -525,22 +516,40 @@ if(e.key==="Enter") send()
 
 function askStudent(){
 
-let name=localStorage.getItem("studentName")
-let id=localStorage.getItem("studentID")
+let name = localStorage.getItem("studentName")
+let id = localStorage.getItem("studentID")
 
 if(!name){
 
-name=prompt("Enter your name")
-id=prompt("Enter your student ID")
+  name = prompt("Enter your name")
+  id = prompt("Enter your student ID")
 
-localStorage.setItem("studentName",name)
-localStorage.setItem("studentID",id)
-
+  localStorage.setItem("studentName", name)
+  localStorage.setItem("studentID", id)
 }
 
-document.getElementById("studentName").textContent=name
-document.getElementById("studentID").textContent="Student ID: "+id
-document.getElementById("avatarInitial").textContent=name[0]
+document.getElementById("studentName").textContent = name
+document.getElementById("studentID").textContent = "Student ID: " + id
+
+document.getElementById("avatarInitial").textContent = name[0]
+
+
+currentUserId = id
+
+
+chatHistory = JSON.parse(localStorage.getItem("chat_" + currentUserId)) || []
+
+
+messages.innerHTML = ""
+
+
+chatHistory.forEach(msg => {
+  if(msg.type === "user"){
+    addUserMessage(msg.text, false) 
+  } else {
+    addBotMessage(msg.text, false)
+  }
+})
 
 }
 
@@ -550,9 +559,11 @@ window.addEventListener("load",()=>{
 
 askStudent()
 
-const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
-
-addBotMessage(welcome)
+// ===== Show welcome ONLY if no history =====
+if(chatHistory.length === 0){
+  const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
+  addBotMessage(welcome)
+}
 
 })
 
@@ -560,13 +571,3 @@ addBotMessage(welcome)
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
