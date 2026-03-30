@@ -312,6 +312,9 @@ let sessionId = localStorage.getItem("chat_session_id");
   // ===== Chat History Variables =====
 let chatHistory = []
 let currentUserId = ""
+let chats = JSON.parse(localStorage.getItem("chats")) || []
+let currentChatId = ""
+
   
 if(!sessionId){
   sessionId = "session-" + Math.random().toString(36).substring(2,10);
@@ -330,19 +333,53 @@ document.querySelector(".sidebar").classList.toggle("closed")
 
 /* CHAT HISTORY */
 
-function addHistory(text){
+function addHistory(){
 
 const history=document.getElementById("history")
+history.innerHTML=""
 
-const item=document.createElement("div")
-item.className="history-item"
+const allChats = JSON.parse(localStorage.getItem("chats")) || []
 
-item.innerHTML=text.slice(0,40)+"<span class='time'>"+formatTime()+"</span>"
+allChats.slice().reverse().forEach(chat => {
 
-history.prepend(item)
+  const item=document.createElement("div")
+  item.className="history-item"
+
+  const lastMsg = chat.messages?.[chat.messages.length - 1]
+
+  item.innerHTML=(lastMsg?.text || "New Chat").slice(0,40) +
+  "<span class='time'>"+formatTime()+"</span>"
+
+  item.onclick = () => loadChat(chat.id)
+
+  history.appendChild(item)
+
+})
 
 }
 
+/* Load chat from history and display messages */
+
+function loadChat(chatId){
+
+const allChats = JSON.parse(localStorage.getItem("chats")) || []
+
+const chat = allChats.find(c => c.id === chatId)
+
+currentChatId = chatId
+
+messages.innerHTML=""
+
+if(!chat || !chat.messages) return
+chat.messages.forEach(msg => {
+  if(msg.type==="user"){
+    addUserMessage(msg.text,false)
+  } else {
+    addBotMessage(msg.text,false)
+  }
+})
+
+} 
 /* TIME FORMAT */
 
 function formatTime(){
@@ -380,7 +417,11 @@ messages.scrollTop=messages.scrollHeight
 
 if(save){
   chatHistory.push({type:"bot", text:text})
-  localStorage.setItem("chat_" + currentUserId, JSON.stringify(chatHistory))
+ const chat = chats.find(c => c.id === currentChatId)
+ if(!chat) return
+ chat.messages.push({type:"bot", text:text})
+
+localStorage.setItem("chats", JSON.stringify(chats))
 }
 
 }
@@ -398,8 +439,16 @@ messages.appendChild(bubble)
 messages.scrollTop=messages.scrollHeight
 
 if(save){
+
   chatHistory.push({type:"user", text:text})
-  localStorage.setItem("chat_" + currentUserId, JSON.stringify(chatHistory))
+
+  const chat = chats.find(c => c.id === currentChatId)
+
+  if(!chat) return
+
+  chat.messages.push({type:"user", text:text})
+
+  localStorage.setItem("chats", JSON.stringify(chats))
 }
 
 }
@@ -410,12 +459,21 @@ function newChat(){
 
 messages.innerHTML=""
 
-
 chatHistory = []
-localStorage.removeItem("chat_" + currentUserId)
+
+currentChatId = "chat_" + Date.now()
+
+chats.push({
+  id: currentChatId,
+  messages: []
+})
+
+localStorage.setItem("chats", JSON.stringify(chats))
 
 const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
 addBotMessage(welcome)
+
+addHistory()
 
 }
 
@@ -502,8 +560,17 @@ document.getElementById("avatarInitial").textContent = name[0]
 currentUserId = id
 
 
-chatHistory = JSON.parse(localStorage.getItem("chat_" + currentUserId)) || []
+// create new chat every time page loads
+currentChatId = "chat_" + Date.now()
 
+chatHistory = []
+
+chats.push({
+  id: currentChatId,
+  messages: []
+})
+
+localStorage.setItem("chats", JSON.stringify(chats))
 
 messages.innerHTML = ""
 
@@ -523,6 +590,7 @@ chatHistory.forEach(msg => {
 window.addEventListener("load",()=>{
 
 askStudent()
+addHistory()
 
 // ===== Show welcome ONLY if no history =====
 if(chatHistory.length === 0){
