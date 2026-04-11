@@ -651,7 +651,7 @@ if (loading) {
   loading.style.display = "none"
 }
 
-const reply = data.output || "Sorry, I couldn't get a response."
+const reply = data.output || data[0]?.output || "Sorry, I couldn't get a response."
 addBotMessage(reply)
 
 }catch(err){
