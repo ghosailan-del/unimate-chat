@@ -622,7 +622,9 @@ addHistory(text)
 
 input.value = ""
 
-loading.style.display = "flex"
+if (loading) {
+  loading.style.display = "flex"
+}
 
 messages.scrollTop = messages.scrollHeight
 
@@ -645,7 +647,9 @@ subsystemData: subsystemData
 
 const data = await res.json()
 
-loading.style.display = "none"
+if (loading) {
+  loading.style.display = "none"
+}
 
 const reply = data.output || "Sorry, I couldn't get a response."
 addBotMessage(reply)
@@ -654,7 +658,9 @@ addBotMessage(reply)
 
 console.error(err)
 
-loading.style.display = "none"
+if (loading) {
+  loading.style.display = "none"
+}
 
 addBotMessage("Connection error with the AI service.")
 
