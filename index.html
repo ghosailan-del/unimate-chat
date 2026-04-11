@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>UniMate Academic Advisor</title>
 
-
 <style>
 
 /* BASIC RESET */
@@ -179,6 +178,8 @@ background:white;
 padding:14px 18px;
 border-radius:16px;
 max-width:420px;
+white-space:pre-wrap;
+word-break:break-word;
 }
 
 .user{
@@ -228,6 +229,38 @@ color:white;
 background:#d4af57;
 }
 
+.typing {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.typing span {
+  width: 8px;
+  height: 8px;
+  background: #555;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite;
+}
+
+.typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
 </style>
 </head>
@@ -279,14 +312,32 @@ UPM University
 
 </div>
 
-<div class="messages" id="messages"></div>
+<div class="messages" id="messages">
+
+  <!-- 🔥 typing indicator -->
+  <div id="loading" class="bot-row" style="display:none;">
+    <div class="bot-avatar">
+      <img src="logo.png">
+    </div>
+
+    <div class="bot-bubble typing">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+
+</div>
 
 <div class="input-wrap">
 
 <div class="input-area">
 
-<input id="input" placeholder="Ask your academic advisor...">
+<input type="file" id="transcriptFile" accept=".pdf" hidden>
 
+<button class="sound-btn" id="uploadBtn" type="button" onclick="document.getElementById('transcriptFile').click()">📎</button>
+
+<input id="input" placeholder="Ask your academic advisor...">
 
 <button class="send-btn" id="sendBtn" onclick="send()">➤</button>
 
@@ -296,7 +347,6 @@ UPM University
 
 </main>
 
-
 <script>
 
 /* DOM ELEMENTS */
@@ -304,7 +354,12 @@ UPM University
 const messages=document.getElementById("messages")
 const input=document.getElementById("input")
 const sendBtn=document.getElementById("sendBtn")
+const transcriptFile=document.getElementById("transcriptFile")
 
+/* URLS */
+
+const N8N_CHAT_URL="https://ghaidaa2001.app.n8n.cloud/webhook/9709f789-eb90-43f8-915d-99220c961b0c/chat"
+const SUBSYSTEM_URL="https://sanamouazen.pythonanywhere.com"
 
   // create or load session id
 let sessionId = localStorage.getItem("chat_session_id");
@@ -315,7 +370,11 @@ let currentUserId = ""
 let chats = JSON.parse(localStorage.getItem("chats")) || []
 let currentChatId = ""
 
-  
+/* SUBSYSTEM DATA */
+
+let transcriptReady = localStorage.getItem("transcriptReady") === "true"
+let subsystemData = JSON.parse(localStorage.getItem("subsystemData") || "null")
+
 if(!sessionId){
   sessionId = "session-" + Math.random().toString(36).substring(2,10);
   localStorage.setItem("chat_session_id", sessionId);
@@ -380,6 +439,7 @@ chat.messages.forEach(msg => {
 })
 
 } 
+
 /* TIME FORMAT */
 
 function formatTime(){
@@ -390,7 +450,6 @@ return now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
 /* BOT MESSAGE */
 
 function addBotMessage(text, save = true){
-
 
 const row=document.createElement("div")
 row.className="bot-row"
@@ -403,10 +462,10 @@ img.src="logo.png"
 
 avatar.appendChild(img)
 
-
 const bubble=document.createElement("div")
 bubble.className="bot-bubble"
-bubble.textContent=text
+const urlPattern = /(https?:\/\/[^\s]+)/g;
+bubble.innerHTML = String(text).replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
 row.appendChild(avatar)
 row.appendChild(bubble)
@@ -414,14 +473,13 @@ row.appendChild(bubble)
 messages.appendChild(row)
 messages.scrollTop=messages.scrollHeight
 
-
 if(save){
   chatHistory.push({type:"bot", text:text})
- const chat = chats.find(c => c.id === currentChatId)
- if(!chat) return
- chat.messages.push({type:"bot", text:text})
+  const chat = chats.find(c => c.id === currentChatId)
+  if(!chat) return
+  chat.messages.push({type:"bot", text:text})
 
-localStorage.setItem("chats", JSON.stringify(chats))
+  localStorage.setItem("chats", JSON.stringify(chats))
 }
 
 }
@@ -430,10 +488,10 @@ localStorage.setItem("chats", JSON.stringify(chats))
 
 function addUserMessage(text, save = true){
 
-
 const bubble=document.createElement("div")
 bubble.className="user"
-bubble.textContent=text
+const urlPattern = /(https?:\/\/[^\s]+)/g;
+bubble.innerHTML = String(text).replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
 messages.appendChild(bubble)
 messages.scrollTop=messages.scrollHeight
@@ -477,6 +535,72 @@ addHistory()
 
 }
 
+/* SUBSYSTEM UPLOAD */
+
+transcriptFile.addEventListener("change", async (e) => {
+
+const file = e.target.files[0]
+if(!file) return
+
+addUserMessage("Uploading transcript...")
+
+const formData = new FormData()
+formData.append("file", file)
+formData.append("sessionId", sessionId)
+formData.append("studentId", localStorage.getItem("studentID") || "")
+formData.append("studentName", localStorage.getItem("studentName") || "")
+
+try{
+
+const res = await fetch(`${SUBSYSTEM_URL}/api/upload-transcript`, {
+method:"POST",
+body: formData
+})
+
+const data = await res.json()
+console.log("Subsystem response:", data)
+
+if(res.ok){
+  transcriptReady = true
+  subsystemData = data
+
+  localStorage.setItem("transcriptReady", "true")
+  localStorage.setItem("subsystemData", JSON.stringify(data))
+
+  const statusMsg =
+    data.ui_summary ||
+    data.message ||
+    data.output ||
+    data.reply ||
+    "Transcript uploaded successfully."
+
+  addBotMessage(statusMsg)
+
+  if (data.alert) {
+    addBotMessage(data.alert)
+  }
+
+  if (Array.isArray(data.remaining_courses) && data.remaining_courses.length) {
+    addBotMessage("Remaining courses:\n" + data.remaining_courses.join("\n"))
+  }
+
+  if (data.excel_path) {
+    addBotMessage("Download your study plan report:\n" + SUBSYSTEM_URL + data.excel_path)
+  }
+}else{
+  addBotMessage(data.error || "Transcript upload failed.")
+}
+
+}catch(err){
+
+console.error(err)
+addBotMessage("Connection error with the transcript subsystem.")
+
+}
+
+e.target.value = ""
+
+})
 
 /* SEND MESSAGE TO n8n */
 
@@ -490,15 +614,21 @@ if(!text) return
 sending = true
 sendBtn.textContent = "..."
 
+const loading = document.getElementById("loading")
+
 addUserMessage(text)
 addHistory(text)
 
 input.value = ""
 
+loading.style.display = "flex"
+
+messages.scrollTop = messages.scrollHeight
+
 try{
 
 const res = await fetch(
-"https://ghaidaa2001.app.n8n.cloud/webhook/9709f789-eb90-43f8-915d-99220c961b0c/chat",
+N8N_CHAT_URL,
 {
 method:"POST",
 headers:{
@@ -506,20 +636,25 @@ headers:{
 },
 body: JSON.stringify({
 chatInput: text,
-sessionId: sessionId
+sessionId: sessionId,
+transcriptReady: transcriptReady,
+subsystemData: subsystemData
 })
 })
 
 const data = await res.json()
 
+loading.style.display = "none"
+
 const reply = data.output || "Sorry, I couldn't get a response."
 addBotMessage(reply)
-
-
 
 }catch(err){
 
 console.error(err)
+
+loading.style.display = "none"
+
 addBotMessage("Connection error with the AI service.")
 
 }
@@ -554,11 +689,9 @@ if(!name){
 document.getElementById("studentName").textContent = name
 document.getElementById("studentID").textContent = "Student ID: " + id
 
-document.getElementById("avatarInitial").textContent = name[0]
-
+document.getElementById("avatarInitial").textContent = name ? name[0] : "U"
 
 currentUserId = id
-
 
 // create new chat every time page loads
 currentChatId = "chat_" + Date.now()
@@ -574,10 +707,9 @@ localStorage.setItem("chats", JSON.stringify(chats))
 
 messages.innerHTML = ""
 
-
 chatHistory.forEach(msg => {
   if(msg.type === "user"){
-    addUserMessage(msg.text, false) 
+    addUserMessage(msg.text, false)
   } else {
     addBotMessage(msg.text, false)
   }
