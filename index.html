@@ -2,752 +2,953 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UniMate Academic Advisor</title>
-
 <style>
-
-/* BASIC RESET */
-
 *{box-sizing:border-box}
-
 body{
-margin:0;
-font-family:Arial;
-height:100vh;
-display:flex;
-background:#eef2f7;
-overflow:hidden;
+  margin:0;
+  font-family:Arial, "Segoe UI", Tahoma, sans-serif;
+  height:100vh;
+  display:flex;
+  background:#eef2f7;
+  overflow:hidden;
 }
-
-/* SIDEBAR */
-
 .sidebar{
-width:280px;
-background:#1e3555;
-color:white;
-display:flex;
-flex-direction:column;
-padding:20px;
-gap:18px;
-transition:.3s;
+  width:280px;
+  background:#1e3555;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  padding:20px;
+  gap:18px;
+  transition:.3s;
 }
-
-.sidebar.closed{
-width:0;
-padding:0;
-overflow:hidden;
-}
-
-/* MAIN */
-
-.main{
-flex:1;
-width:100%;
-display:flex;
-flex-direction:column;
-transition:0.3s;
-}
-
-.sidebar-top{
-display:flex;
-align-items:center;
-gap:12px;
-font-size:20px;
-font-weight:bold;
-}
-
-.sidebar-top img{
-width:40px;
-}
-
+.sidebar.closed{width:0;padding:0;overflow:hidden}
+.main{flex:1;width:100%;display:flex;flex-direction:column;transition:0.3s;min-width:0}
+.sidebar-top{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:bold}
+.sidebar-top img{width:40px}
 .new-chat{
-border:none;
-background:#d4af57;
-padding:12px;
-border-radius:10px;
-cursor:pointer;
-font-weight:bold;
+  border:none;
+  background:#d4af57;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
 }
-
-.section-title{
-font-size:13px;
-opacity:.7;
-margin-top:10px;
-}
-
-.history{
-display:flex;
-flex-direction:column;
-gap:10px;
-}
-
+.new-chat:disabled{opacity:.55;cursor:not-allowed}
+.section-title{font-size:13px;opacity:.7;margin-top:10px}
+.history{display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;min-height:0}
 .history-item{
-background:#29456c;
-padding:12px;
-border-radius:10px;
-cursor:pointer;
+  background:#29456c;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  text-align:start;
 }
-
-.history-item .time{
-font-size:12px;
-opacity:.7;
-display:block;
-margin-top:4px;
-}
-
-/* USER CARD */
-
+.history-item.active{outline:2px solid #d4af57;outline-offset:2px}
+.history-item .title{font-size:14px;word-break:break-word}
+.history-item .time{font-size:12px;opacity:.7;display:block;margin-top:4px}
 .sidebar-user{
-margin-top:auto;
-background:#29456c;
-padding:14px;
-border-radius:12px;
-display:flex;
-gap:12px;
-align-items:center;
+  margin-top:auto;
+  background:#29456c;
+  padding:14px;
+  border-radius:12px;
+  display:flex;
+  gap:12px;
+  align-items:center;
 }
-
 .avatar{
-width:45px;
-height:45px;
-border-radius:50%;
-background:#5a6f94;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
+  width:45px;height:45px;border-radius:50%;background:#5a6f94;
+  display:flex;align-items:center;justify-content:center;font-weight:bold;
 }
-
-.meta .sub{
-font-size:13px;
-opacity:.7;
-}
-
-/* HEADER */
-
+.meta .sub{font-size:13px;opacity:.7}
 .header{
-height:90px;
-background:white;
-display:flex;
-align-items:center;
-gap:16px;
-padding:0 25px;
-border-bottom:1px solid #ddd;
+  height:90px;background:#fff;display:flex;align-items:center;gap:16px;
+  padding:0 25px;border-bottom:1px solid #ddd;flex-shrink:0;
 }
-
-.menu-icon{
-font-size:26px;
-cursor:pointer;
-}
-
-.header-badge img{
-height:65px;
-object-fit:contain;
-}
-
-/* CHAT */
-
+.menu-icon{font-size:26px;cursor:pointer}
+.header-badge img{height:65px;object-fit:contain}
 .messages{
-flex:1;
-overflow-y:auto;
-padding:25px;
-display:flex;
-flex-direction:column;
-gap:18px;
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:25px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
 }
-
-.bot-row{
-display:flex;
-gap:10px;
-}
-
-.bot-avatar{
-width:40px;
-height:40px;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.bot-avatar img{
-width:40px;
-}
-
+.bot-row{display:flex;gap:10px;align-items:flex-end}
+.bot-avatar{width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bot-avatar img{width:40px}
 .bot-bubble{
-background:white;
-padding:14px 18px;
-border-radius:16px;
-max-width:420px;
-white-space:pre-wrap;
-word-break:break-word;
+  background:#fff;
+  padding:14px 18px;
+  border-radius:16px;
+  max-width:min(420px, 100%);
+  white-space:pre-wrap;
+  word-break:break-word;
+  overflow-wrap:anywhere;
 }
-
+.bot-bubble[dir="rtl"]{text-align:right}
+.user-wrap{display:flex;justify-content:flex-end;width:100%}
 .user{
-align-self:flex-end;
-background:#2b4778;
-color:white;
-padding:14px 18px;
-border-radius:16px;
+  max-width:min(420px, 85%);
+  background:#2b4778;
+  color:#fff;
+  padding:14px 18px;
+  border-radius:16px;
+  white-space:pre-wrap;
+  word-break:break-word;
+  overflow-wrap:anywhere;
 }
-
-.input-wrap{
-background:white;
-padding:15px 25px;
-border-top:1px solid #ddd;
-}
-
-.input-area{
-display:flex;
-gap:10px;
-}
-
-.file-pickers{
-display:flex;
-gap:10px;
-margin-bottom:12px;
-flex-wrap:wrap;
-}
-
+.user[dir="rtl"]{text-align:right}
+.user a{color:#c9dcff}
+.bot-bubble a{color:#1e4d8c}
+.input-wrap{background:#fff;padding:15px 25px;border-top:1px solid #ddd;flex-shrink:0}
+.input-area{display:flex;gap:10px;align-items:center}
 input{
-flex:1;
-height:55px;
-border-radius:14px;
-border:1px solid #ddd;
-padding:0 15px;
-font-size:16px;
+  flex:1;
+  min-width:0;
+  height:55px;
+  border-radius:14px;
+  border:1px solid #ddd;
+  padding:0 15px;
+  font-size:16px;
 }
-
-/* BUTTONS */
-
 .sound-btn,.send-btn{
-width:55px;
-border:none;
-border-radius:14px;
-font-size:20px;
-cursor:pointer;
+  width:55px;height:55px;
+  border:none;border-radius:14px;font-size:20px;cursor:pointer;
+  flex-shrink:0;
 }
-
-.sound-btn{
-background:#233f73;
-color:white;
+.sound-btn{background:#233f73;color:#fff}
+.send-btn{background:#d4af57}
+.send-btn:disabled,.sound-btn:disabled{opacity:.55;cursor:not-allowed}
+.typing{display:flex;gap:6px;align-items:center;padding:4px 0}
+.typing span{
+  width:8px;height:8px;background:#555;border-radius:50%;
+  animation:bounce 1.4s infinite;
 }
-
-.send-btn{
-background:#d4af57;
-}
-
-.file-btn{
-border:none;
-border-radius:14px;
-padding:12px 16px;
-cursor:pointer;
-background:#233f73;
-color:white;
-font-weight:bold;
-}
-
-.file-btn.secondary{
-background:#5a6f94;
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{
+  0%,80%,100%{transform:scale(0.5);opacity:0.5}
+  40%{transform:scale(1);opacity:1}
 }
 
 .file-status{
-font-size:13px;
-color:#4a5870;
-padding:0 4px;
+  font-size:13px;
+  color:#4d607f;
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
 }
+.file-chip{
+  background:#f3f6fb;
+  border:1px solid #d7dfec;
+  color:#233f73;
+  padding:6px 10px;
+  border-radius:10px;
+  max-width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.message-meta{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:8px;
+  font-size:11px;
+  opacity:.72;
+  line-height:1;
+}
+.user .message-meta{color:rgba(255,255,255,.85)}
+.bot-bubble .message-meta{color:#6e7d96}
 
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-
 <aside class="sidebar">
-
-<div class="sidebar-top">
-<img src="logo.png">
-<span>UPM</span>
-</div>
-
-<button class="new-chat" onclick="newChat()">+ New Consultation</button>
-
-<div class="section-title">History</div>
-<div class="history" id="history"></div>
-
-<div class="sidebar-user">
-
-<div class="avatar" id="avatarInitial">JD</div>
-
-<div class="meta">
-<div id="studentName">John Doe</div>
-<div class="sub" id="studentID">Student ID: 09214</div>
-</div>
-
-</div>
-
+  <div class="sidebar-top">
+    <img src="logo.png" alt="">
+    <span>UPM</span>
+  </div>
+  <button type="button" class="new-chat" id="newChatBtn" onclick="newChat()">+ New Consultation</button>
+  <div class="section-title">History</div>
+  <div class="history" id="history"></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarInitial">JD</div>
+    <div class="meta">
+      <div id="studentName">John Doe</div>
+      <div class="sub" id="studentID">Student ID: 09214</div>
+    </div>
+  </div>
 </aside>
 
-<!-- MAIN AREA -->
-
 <main class="main">
-
-<div class="header">
-
-<div class="menu-icon" onclick="toggleSidebar()">☰</div>
-
-<div class="header-badge">
-<img src="./UPM11.png">
-</div>
-
-<div>
-<b>UniMate Academic Advisor</b><br>
-UPM University
-</div>
-
-</div>
-
-<div class="messages" id="messages"></div>
-
-<div class="input-wrap">
-
-<div class="file-pickers">
-<input type="file" id="transcriptFile" accept=".pdf,.txt" hidden>
-<input type="file" id="studyPlanFile" accept=".pdf,.docx,.txt,.json,.csv,.xlsx,.xls,.png,.jpg,.jpeg,.bmp,.tif,.tiff,.webp" hidden>
-
-<button class="file-btn" type="button" onclick="document.getElementById('transcriptFile').click()">Transcript File</button>
-<button class="file-btn secondary" type="button" onclick="document.getElementById('studyPlanFile').click()">Study Plan File</button>
-</div>
-
-<div class="file-status" id="fileStatus">Select both a transcript and a study plan file to analyze.</div>
-
-<div class="input-area">
-
-<input id="input" placeholder="Ask your academic advisor...">
-
-<button class="sound-btn" id="uploadBtn" type="button" onclick="uploadStudyPlanAnalysis()">📎</button>
-
-<button class="send-btn" id="sendBtn" onclick="send()">➤</button>
-
-</div>
-
-</div>
-
+  <div class="header">
+    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    <div class="header-badge">
+      <img src="./UPM11.png" alt="UPM">
+    </div>
+    <div>
+      <b>UniMate Academic Advisor</b><br>
+      UPM University
+    </div>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="input-wrap">
+    <div class="input-area">
+      <input type="file" id="transcriptFile" accept=".pdf" hidden>
+      <input type="file" id="studyPlanFile" accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls" hidden>
+      <button type="button" class="sound-btn" id="uploadTranscriptBtn" title="Select transcript" onclick="document.getElementById('transcriptFile').click()">📎</button>
+      <button type="button" class="sound-btn" id="uploadStudyPlanBtn" title="Select study plan" onclick="document.getElementById('studyPlanFile').click()">📘</button>
+      <button type="button" class="sound-btn" id="analyzePlanBtn" title="Analyze transcript + study plan" onclick="analyzeStudyPlanUpload()">🧾</button>
+      <input id="input" placeholder="Ask your academic advisor..." autocomplete="off">
+      <button type="button" class="send-btn" id="sendBtn" onclick="send()">➤</button>
+    </div>
+    <div class="file-status" id="fileStatus"></div>
+  </div>
 </main>
 
 <script>
+const messagesEl = document.getElementById("messages")
+const inputEl = document.getElementById("input")
+const sendBtn = document.getElementById("sendBtn")
+const newChatBtn = document.getElementById("newChatBtn")
+const uploadTranscriptBtn = document.getElementById("uploadTranscriptBtn")
+const uploadStudyPlanBtn = document.getElementById("uploadStudyPlanBtn")
+const analyzePlanBtn = document.getElementById("analyzePlanBtn")
+const transcriptFile = document.getElementById("transcriptFile")
+const studyPlanFile = document.getElementById("studyPlanFile")
+const fileStatusEl = document.getElementById("fileStatus")
 
-/* DOM ELEMENTS */
+const N8N_CHAT_URL = "https://ghaidaa2001.app.n8n.cloud/webhook/9709f789-eb90-43f8-915d-99220c961b0c/chat"
+const SUBSYSTEM_URL = "https://sanamouazen.pythonanywhere.com"
+const LS_CHATS = "chats"
+const LS_CURRENT_CHAT = "currentChatId"
+const SS_CURRENT_CHAT = "currentChatId_ss"
+const LS_SESSION = "chat_session_id"
+const SCHEMA_VERSION = 2
 
-const messages=document.getElementById("messages")
-const input=document.getElementById("input")
-const sendBtn=document.getElementById("sendBtn")
-const transcriptFile=document.getElementById("transcriptFile")
-const studyPlanFile=document.getElementById("studyPlanFile")
-const fileStatus=document.getElementById("fileStatus")
+function chatIdEquals(a, b) {
+  return String(a) === String(b)
+}
 
-/* URLS */
+const WELCOME_TEXT = "Hello! I'm your UniMate Academic Advisor. How can I help you today?"
 
-const N8N_CHAT_URL="https://ghaidaa2001.app.n8n.cloud/webhook/9709f789-eb90-43f8-915d-99220c961b0c/chat"
-const SUBSYSTEM_URL="https://sanamouazen.pythonanywhere.com"
-
-  // create or load session id
-let sessionId = localStorage.getItem("chat_session_id");
-
-  // ===== Chat History Variables =====
-let chatHistory = []
-let currentUserId = ""
-let chats = JSON.parse(localStorage.getItem("chats")) || []
-let currentChatId = ""
-
-/* SUBSYSTEM DATA */
+let sessionId = localStorage.getItem(LS_SESSION)
+if (!sessionId) {
+  sessionId = "session-" + Math.random().toString(36).substring(2, 10)
+  localStorage.setItem(LS_SESSION, sessionId)
+}
 
 let transcriptReady = localStorage.getItem("transcriptReady") === "true"
-let subsystemData = JSON.parse(localStorage.getItem("subsystemData") || "null")
-
-if(!sessionId){
-  sessionId = "session-" + Math.random().toString(36).substring(2,10);
-  localStorage.setItem("chat_session_id", sessionId);
+let selectedTranscriptFile = null
+let selectedStudyPlanFile = null
+let subsystemData = null
+try {
+  subsystemData = JSON.parse(localStorage.getItem("subsystemData") || "null")
+} catch {
+  subsystemData = null
 }
 
-/* MESSAGE LOCK */
+let currentChatId = ""
+let sending = false
+let uploading = false
+let typingEl = null
 
-let sending=false
-let uploadingAnalysis=false
-
-function updateFileStatus(){
-const transcriptName = transcriptFile.files[0]?.name
-const studyPlanName = studyPlanFile.files[0]?.name
-
-if(transcriptName && studyPlanName){
-  fileStatus.textContent = `Ready to analyze: transcript "${transcriptName}" and study plan "${studyPlanName}".`
-  return
-}
-
-if(transcriptName){
-  fileStatus.textContent = `Transcript selected: "${transcriptName}". Select a study plan file next.`
-  return
-}
-
-if(studyPlanName){
-  fileStatus.textContent = `Study plan selected: "${studyPlanName}". Select a transcript file next.`
-  return
-}
-
-fileStatus.textContent = "Select both a transcript and a study plan file to analyze."
-}
-
-/* SIDEBAR TOGGLE */
-
-function toggleSidebar(){
-document.querySelector(".sidebar").classList.toggle("closed")
-}
-
-/* CHAT HISTORY */
-
-function addHistory(){
-
-const history=document.getElementById("history")
-history.innerHTML=""
-
-const allChats = JSON.parse(localStorage.getItem("chats")) || []
-
-allChats.slice().reverse().forEach(chat => {
-
-  const item=document.createElement("div")
-  item.className="history-item"
-
-  const lastMsg = chat.messages?.[chat.messages.length - 1]
-
-  item.innerHTML=(lastMsg?.text || "New Chat").slice(0,40) +
-  "<span class='time'>"+formatTime()+"</span>"
-
-  item.onclick = () => loadChat(chat.id)
-
-  history.appendChild(item)
-
-})
-
-}
-
-/* Load chat from history and display messages */
-
-function loadChat(chatId){
-
-const allChats = JSON.parse(localStorage.getItem("chats")) || []
-
-const chat = allChats.find(c => c.id === chatId)
-
-currentChatId = chatId
-
-messages.innerHTML=""
-
-if(!chat || !chat.messages) return
-chat.messages.forEach(msg => {
-  if(msg.type==="user"){
-    addUserMessage(msg.text,false)
-  } else {
-    addBotMessage(msg.text,false)
+function loadChatsRaw() {
+  try {
+    const raw = localStorage.getItem(LS_CHATS)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
   }
-})
-
-} 
-
-/* TIME FORMAT */
-
-function formatTime(){
-const now=new Date()
-return now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
 }
 
-/* BOT MESSAGE */
-
-function addBotMessage(text, save = true){
-
-const row=document.createElement("div")
-row.className="bot-row"
-
-const avatar=document.createElement("div")
-avatar.className="bot-avatar"
-
-const img=document.createElement("img")
-img.src="logo.png"
-
-avatar.appendChild(img)
-
-const bubble=document.createElement("div")
-bubble.className="bot-bubble"
-const urlPattern = /(https?:\/\/[^\s]+)/g;
-bubble.innerHTML = String(text).replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-
-row.appendChild(avatar)
-row.appendChild(bubble)
-
-messages.appendChild(row)
-messages.scrollTop=messages.scrollHeight
-
-if(save){
-  chatHistory.push({type:"bot", text:text})
-  const chat = chats.find(c => c.id === currentChatId)
-  if(!chat) return
-  chat.messages.push({type:"bot", text:text})
-
-  localStorage.setItem("chats", JSON.stringify(chats))
+function saveChats(chats) {
+  localStorage.setItem(LS_CHATS, JSON.stringify(chats))
 }
 
+function newMsgId() {
+  return "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9)
 }
 
-/* USER MESSAGE */
-
-function addUserMessage(text, save = true){
-
-const bubble=document.createElement("div")
-bubble.className="user"
-const urlPattern = /(https?:\/\/[^\s]+)/g;
-bubble.innerHTML = String(text).replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-
-messages.appendChild(bubble)
-messages.scrollTop=messages.scrollHeight
-
-if(save){
-
-  chatHistory.push({type:"user", text:text})
-
-  const chat = chats.find(c => c.id === currentChatId)
-
-  if(!chat) return
-
-  chat.messages.push({type:"user", text:text})
-
-  localStorage.setItem("chats", JSON.stringify(chats))
+function isUploadStatusMessage(text) {
+  const s = String(text).trim()
+  if (!s) return false
+  if (/^uploading transcript/i.test(s)) return true
+  if (/^(جاري\s+رفع|يتم\s+رفع|رفع\s+النسخة|رفع\s+الملف|رفع\s+الكشف)/i.test(s)) return true
+  return false
 }
 
+function firstSubstantiveUser(messages) {
+  return messages.find(m => m.role === "user" && String(m.text).trim() && !isUploadStatusMessage(m.text))
 }
 
-/* NEW CHAT */
+function normalizeChatsInPlace(chats) {
+  let dirty = false
+  const list = Array.isArray(chats) ? chats : []
+  const out = []
+  for (const raw of list) {
+    const c = raw && typeof raw === "object" ? raw : null
+    if (!c || c.id == null || String(c.id).trim() === "") continue
 
-function newChat(){
+    if (!c.meta || typeof c.meta !== "object") {
+      c.meta = { schemaVersion: 0 }
+      dirty = true
+    }
+    if (typeof c.meta.schemaVersion !== "number" || c.meta.schemaVersion < SCHEMA_VERSION) {
+      c.meta.schemaVersion = SCHEMA_VERSION
+      dirty = true
+    }
 
-messages.innerHTML=""
+    if (!Array.isArray(c.messages)) {
+      c.messages = []
+      dirty = true
+    }
 
-chatHistory = []
+    c.messages = c.messages.map((m, i) => {
+      const role = m.role || (m.type === "user" ? "user" : "assistant")
+      const text = String(m.text ?? "")
+      let ts = typeof m.ts === "number" && m.ts > 0 ? m.ts : 0
+      if (!ts) dirty = true
+      let id = typeof m.id === "string" && m.id ? m.id : ""
+      if (!id) {
+        id = newMsgId()
+        dirty = true
+      }
+      return { id, role, text, ts }
+    })
 
-currentChatId = "chat_" + Date.now()
+    const missingTs = c.messages.some(m => !m.ts)
+    if (missingTs) {
+      if (typeof c.meta.backfillBaseTs !== "number" || c.meta.backfillBaseTs <= 0) {
+        c.meta.backfillBaseTs = Date.now()
+        dirty = true
+      }
+      const base = c.meta.backfillBaseTs
+      c.messages.forEach((m, i) => {
+        if (!m.ts) {
+          m.ts = base + i
+          dirty = true
+        }
+      })
+    }
 
-chats.push({
-  id: currentChatId,
-  messages: []
-})
+    const allTs = c.messages.map(m => m.ts).filter(t => typeof t === "number" && t > 0)
+    const minTs = allTs.length ? Math.min(...allTs) : 0
+    const maxTs = allTs.length ? Math.max(...allTs) : 0
 
-localStorage.setItem("chats", JSON.stringify(chats))
+    if (typeof c.createdAt !== "number" || c.createdAt <= 0) {
+      c.createdAt = minTs || maxTs || Date.now()
+      dirty = true
+    }
+    if (typeof c.updatedAt !== "number" || c.updatedAt <= 0) {
+      c.updatedAt = maxTs || c.createdAt
+      dirty = true
+    }
+    if (c.updatedAt < c.createdAt) {
+      c.updatedAt = c.createdAt
+      dirty = true
+    }
+    if (typeof c.meta.lastActivityAt !== "number" || c.meta.lastActivityAt <= 0) {
+      c.meta.lastActivityAt = c.updatedAt
+      dirty = true
+    }
 
-const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
-addBotMessage(welcome)
+    const fu = firstSubstantiveUser(c.messages)
+    const wantTitle = fu ? truncateTitle(fu.text, 40) : "New consultation"
+    if (c.title !== wantTitle) {
+      c.title = wantTitle
+      dirty = true
+    }
+    c.meta.titlePinned = !!fu
+    c.meta.messageCount = c.messages.length
 
-addHistory()
-
+    out.push(c)
+  }
+  if (dirty && (out.length > 0 || list.length === 0)) saveChats(out)
+  return out
 }
 
-/* SUBSYSTEM UPLOAD */
-
-transcriptFile.addEventListener("change", updateFileStatus)
-studyPlanFile.addEventListener("change", updateFileStatus)
-
-async function uploadStudyPlanAnalysis(){
-
-if(uploadingAnalysis) return
-
-const transcript = transcriptFile.files[0]
-const studyPlan = studyPlanFile.files[0]
-
-if(!transcript || !studyPlan){
-  addBotMessage("Please select both a transcript file and a study plan file before uploading.")
-  return
+function loadChats() {
+  return normalizeChatsInPlace(loadChatsRaw())
 }
 
-uploadingAnalysis = true
-fileStatus.textContent = "Uploading transcript and study plan for analysis..."
+function truncateTitle(s, max) {
+  const t = String(s).trim()
+  const chars = [...t]
+  if (chars.length <= max) return t || "New consultation"
+  return chars.slice(0, max - 1).join("") + "\u2026"
+}
 
-addUserMessage(`Analyzing transcript "${transcript.name}" with study plan "${studyPlan.name}"...`)
+function firstUserSnippet(text) {
+  return truncateTitle(text, 40)
+}
 
-const formData = new FormData()
-formData.append("transcript", transcript)
-formData.append("study_plan", studyPlan)
-formData.append("sessionId", sessionId)
-formData.append("studentId", localStorage.getItem("studentID") || "")
-formData.append("studentName", localStorage.getItem("studentName") || "")
+function formatChatTime(ts) {
+  const d = typeof ts === "number" ? new Date(ts) : new Date()
+  return d.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  })
+}
 
-try{
+function formatBubbleTime(ts) {
+  const d = typeof ts === "number" ? new Date(ts) : new Date()
+  return d.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  })
+}
 
-const res = await fetch(`${SUBSYSTEM_URL}/api/analyze-study-plan`, {
-method:"POST",
-body: formData
-})
+function touchChat(chat) {
+  const now = Date.now()
+  chat.updatedAt = now
+  if (!chat.meta || typeof chat.meta !== "object") chat.meta = { schemaVersion: SCHEMA_VERSION }
+  chat.meta.lastActivityAt = now
+}
 
-const data = await res.json()
-console.log("Subsystem response:", data)
+function findChat(chats, id) {
+  return chats.find(c => chatIdEquals(c.id, id))
+}
 
-if(res.ok){
-  transcriptReady = true
-  subsystemData = data
+function setCurrentChatId(id) {
+  currentChatId = id
+  if (!id) return
+  try {
+    localStorage.setItem(LS_CURRENT_CHAT, id)
+    sessionStorage.setItem(SS_CURRENT_CHAT, id)
+  } catch (e) {
+    /* private mode / quota */
+  }
+}
 
-  localStorage.setItem("transcriptReady", "true")
-  localStorage.setItem("subsystemData", JSON.stringify(data))
+function getStoredCurrentChatId() {
+  try {
+    return localStorage.getItem(LS_CURRENT_CHAT) || sessionStorage.getItem(SS_CURRENT_CHAT) || ""
+  } catch {
+    return ""
+  }
+}
 
-  addBotMessage("Analysis completed. Download your files below.")
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
 
-  if (data.excel_file) {
-    addBotMessage("Download Audit Excel:\n" + SUBSYSTEM_URL + data.excel_file)
+function linkifyEscaped(escaped) {
+  const urlPattern = /(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g
+  return escaped.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+}
+
+function setBubbleHtml(el, text, { linkify } = {}) {
+  const raw = String(text ?? "").trim()
+  if (!raw) {
+    el.innerHTML = ""
+    return
+  }
+  const esc = escapeHtml(raw)
+  el.innerHTML = linkify ? linkifyEscaped(esc) : esc
+}
+
+function isMostlyRtl(text) {
+  const sample = String(text).replace(/\s/g, "")
+  if (!sample) return false
+  const rtl = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/g
+  const hits = (sample.match(rtl) || []).length
+  return hits / [...sample].length > 0.35
+}
+
+function scrollMessagesToEnd(smooth) {
+  requestAnimationFrame(() => {
+    messagesEl.scrollTo({
+      top: messagesEl.scrollHeight,
+      behavior: smooth ? "smooth" : "auto"
+    })
+  })
+}
+
+function removeTypingIndicator() {
+  if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl)
+  typingEl = null
+}
+
+function showTypingIndicator() {
+  removeTypingIndicator()
+  const row = document.createElement("div")
+  row.className = "bot-row"
+  row.setAttribute("data-typing", "1")
+  const avatar = document.createElement("div")
+  avatar.className = "bot-avatar"
+  const img = document.createElement("img")
+  img.src = "logo.png"
+  img.alt = ""
+  avatar.appendChild(img)
+  const bubble = document.createElement("div")
+  bubble.className = "bot-bubble typing"
+  bubble.innerHTML = "<span></span><span></span><span></span>"
+  row.appendChild(avatar)
+  row.appendChild(bubble)
+  messagesEl.appendChild(row)
+  typingEl = row
+  scrollMessagesToEnd(true)
+}
+
+function setInputSendingState(busy) {
+  sendBtn.disabled = busy
+  newChatBtn.disabled = busy
+  uploadTranscriptBtn.disabled = busy
+  uploadStudyPlanBtn.disabled = busy
+  analyzePlanBtn.disabled = busy
+  inputEl.readOnly = busy
+}
+
+function persistMessage(chat, role, text, tsOverride) {
+  const t = String(text ?? "").trim()
+  if (!t) return
+  if (!chat.meta || typeof chat.meta !== "object") chat.meta = { schemaVersion: SCHEMA_VERSION }
+  chat.meta.schemaVersion = SCHEMA_VERSION
+  const ts = typeof tsOverride === "number" && tsOverride > 0 ? tsOverride : Date.now()
+  chat.messages.push({ id: newMsgId(), role, text: t, ts })
+  if (role === "user") {
+    const fu = firstSubstantiveUser(chat.messages)
+    if (fu) chat.title = firstUserSnippet(fu.text)
+  }
+  touchChat(chat)
+  chat.meta.messageCount = chat.messages.length
+}
+
+function renderUserBubble(text, ts) {
+  const wrap = document.createElement("div")
+  wrap.className = "user-wrap"
+  const bubble = document.createElement("div")
+  bubble.className = "user"
+  const t = String(text ?? "").trim()
+  setBubbleHtml(bubble, t, { linkify: false })
+  const rtl = isMostlyRtl(t)
+  bubble.setAttribute("dir", rtl ? "rtl" : "ltr")
+  const meta = document.createElement("div")
+  meta.className = "message-meta"
+  meta.textContent = formatBubbleTime(ts)
+  bubble.appendChild(meta)
+  wrap.appendChild(bubble)
+  messagesEl.appendChild(wrap)
+}
+
+function renderAssistantBubble(text, ts) {
+  const row = document.createElement("div")
+  row.className = "bot-row"
+  const avatar = document.createElement("div")
+  avatar.className = "bot-avatar"
+  const img = document.createElement("img")
+  img.src = "logo.png"
+  img.alt = ""
+  avatar.appendChild(img)
+  const bubble = document.createElement("div")
+  bubble.className = "bot-bubble"
+  const t = String(text ?? "").trim()
+  setBubbleHtml(bubble, t, { linkify: true })
+  bubble.setAttribute("dir", isMostlyRtl(t) ? "rtl" : "ltr")
+  const meta = document.createElement("div")
+  meta.className = "message-meta"
+  meta.textContent = formatBubbleTime(ts)
+  bubble.appendChild(meta)
+  row.appendChild(avatar)
+  row.appendChild(bubble)
+  messagesEl.appendChild(row)
+}
+
+function appendMessageToDom(role, text, ts) {
+  const t = String(text ?? "").trim()
+  if (!t) return
+  if (role === "user") renderUserBubble(t, ts)
+  else renderAssistantBubble(t, ts)
+  scrollMessagesToEnd(true)
+}
+
+function addMessage(role, text, { save } = { save: true }) {
+  const chats = loadChats()
+  const chat = findChat(chats, currentChatId)
+  if (!chat) return
+  const t = String(text ?? "").trim()
+  if (!t) return
+  const ts = Date.now()
+  appendMessageToDom(role, t, ts)
+  if (save) {
+    persistMessage(chat, role, t, ts)
+    saveChats(chats)
+    renderHistory()
+  }
+}
+
+function clearMessagesDom() {
+  removeTypingIndicator()
+  messagesEl.innerHTML = ""
+}
+
+function renderThreadFromStore() {
+  clearMessagesDom()
+  const chats = loadChats()
+  const chat = findChat(chats, currentChatId)
+  if (!chat) return
+  for (const m of chat.messages) {
+    const role = m.role === "user" ? "user" : "assistant"
+    const t = String(m.text ?? "").trim()
+    if (!t) continue
+    appendMessageToDom(role, t, m.ts)
+  }
+  if (!chat.messages.length) {
+    appendMessageToDom("assistant", WELCOME_TEXT)
+  }
+  scrollMessagesToEnd(false)
+}
+
+function renderHistory() {
+  const history = document.getElementById("history")
+  history.innerHTML = ""
+  const chats = loadChats().slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+  chats.forEach(chat => {
+    const item = document.createElement("div")
+    item.className = "history-item" + (chat.id === currentChatId ? " active" : "")
+    const title = document.createElement("div")
+    title.className = "title"
+    title.textContent = chat.title || "New consultation"
+    const time = document.createElement("span")
+    time.className = "time"
+    time.textContent = formatChatTime(chat.updatedAt)
+    item.appendChild(title)
+    item.appendChild(time)
+    const metaBits = [
+      "Updated: " + formatChatTime(chat.updatedAt),
+      "Created: " + formatChatTime(chat.createdAt),
+      chat.meta && typeof chat.meta.lastActivityAt === "number"
+        ? "Last: " + formatChatTime(chat.meta.lastActivityAt)
+        : "",
+      chat.meta && chat.meta.messageCount != null ? "Messages: " + chat.meta.messageCount : "",
+      chat.meta && chat.meta.schemaVersion ? "v" + chat.meta.schemaVersion : ""
+    ].filter(Boolean)
+    item.title = metaBits.join(" · ")
+    item.onclick = () => loadChat(chat.id)
+    history.appendChild(item)
+  })
+}
+
+function loadChat(chatId) {
+  if (sending || uploading) return
+  const chats = loadChats()
+  if (!findChat(chats, chatId)) return
+  setCurrentChatId(chatId)
+  renderThreadFromStore()
+  renderHistory()
+}
+
+function newChat(clearInput = true) {
+  if (sending || uploading) return
+  const chats = loadChats()
+  const id = "chat_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
+  const now = Date.now()
+  const chat = {
+    id,
+    title: "New consultation",
+    createdAt: now,
+    updatedAt: now,
+    meta: { schemaVersion: SCHEMA_VERSION, messageCount: 0 },
+    messages: []
+  }
+  chats.push(chat)
+  saveChats(chats)
+  setCurrentChatId(id)
+  clearMessagesDom()
+  addMessage("assistant", WELCOME_TEXT, { save: true })
+  renderHistory()
+  if (clearInput) inputEl.value = ""
+  inputEl.focus()
+}
+
+function toggleSidebar() {
+  document.querySelector(".sidebar").classList.toggle("closed")
+}
+
+function askStudent() {
+  let name = localStorage.getItem("studentName")
+  let id = localStorage.getItem("studentID")
+  if (!name) {
+    name = prompt("Enter your name")
+    id = prompt("Enter your student ID")
+    if (name) localStorage.setItem("studentName", name)
+    if (id) localStorage.setItem("studentID", id)
+  }
+  document.getElementById("studentName").textContent = name || "Student"
+  document.getElementById("studentID").textContent = "Student ID: " + (id || "—")
+  const initials = name && name.length ? [...name.trim()][0] : "U"
+  document.getElementById("avatarInitial").textContent = initials
+}
+
+async function send() {
+  if (sending) return
+  if (inputEl.isComposing) return
+  const text = inputEl.value.trim()
+  if (!text) return
+
+  let chats = loadChats()
+  let chat = findChat(chats, currentChatId)
+  if (!chat) {
+    const id = "chat_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
+    const now = Date.now()
+    chat = {
+      id,
+      title: "New consultation",
+      createdAt: now,
+      updatedAt: now,
+      meta: { schemaVersion: SCHEMA_VERSION, messageCount: 1 },
+      messages: [{ id: newMsgId(), role: "assistant", text: WELCOME_TEXT, ts: now }]
+    }
+    chats.push(chat)
+    saveChats(chats)
+    setCurrentChatId(id)
+    renderHistory()
+    renderThreadFromStore()
   }
 
-  if (data.download_structured_excel_url) {
-    addBotMessage(
-      "Download Structured Study Plan Excel:\n" +
-      SUBSYSTEM_URL + data.download_structured_excel_url
-    )
+  sending = true
+  setInputSendingState(true)
+  sendBtn.textContent = "..."
+
+  inputEl.value = ""
+  addMessage("user", text, { save: true })
+  showTypingIndicator()
+
+  try {
+    const res = await fetch(N8N_CHAT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chatInput: text,
+        sessionId: sessionId,
+        transcriptReady: transcriptReady,
+        subsystemData: subsystemData
+      })
+    })
+    let data = null
+    try {
+      data = await res.json()
+    } catch {
+      data = null
+    }
+    removeTypingIndicator()
+    const replyRaw =
+      (data && (data.output ?? data.text ?? data.reply)) ??
+      (Array.isArray(data) && data[0] && (data[0].output ?? data[0].text)) ??
+      ""
+    const reply = String(replyRaw).trim()
+    if (!res.ok || !reply) {
+      addMessage("assistant", "Sorry, I couldn't get a response.", { save: true })
+    } else {
+      addMessage("assistant", reply, { save: true })
+    }
+  } catch (err) {
+    console.error(err)
+    removeTypingIndicator()
+    addMessage("assistant", "Connection error with the AI service.", { save: true })
+  } finally {
+    sendBtn.textContent = "➤"
+    sending = false
+    setInputSendingState(false)
+    scrollMessagesToEnd(true)
+  }
+}
+
+
+function truncateFilename(name, max = 28) {
+  const s = String(name || "").trim()
+  if (!s) return ""
+  return s.length <= max ? s : s.slice(0, max - 1) + "…"
+}
+
+function renderSelectedFiles() {
+  if (!fileStatusEl) return
+  const chips = []
+  if (selectedTranscriptFile) {
+    chips.push(`<span class="file-chip">Transcript: ${escapeHtml(truncateFilename(selectedTranscriptFile.name))}</span>`)
+  }
+  if (selectedStudyPlanFile) {
+    chips.push(`<span class="file-chip">Study Plan: ${escapeHtml(truncateFilename(selectedStudyPlanFile.name))}</span>`)
+  }
+  fileStatusEl.innerHTML = chips.join("")
+}
+
+async function analyzeStudyPlanUpload() {
+  if (uploading || sending) return
+  if (!selectedTranscriptFile || !selectedStudyPlanFile) {
+    addMessage("assistant", "Please select both a transcript file and a study plan file first.", { save: true })
+    return
   }
 
-  transcriptFile.value = ""
-  studyPlanFile.value = ""
-  updateFileStatus()
-}else{
-  addBotMessage(data.error || "Study plan analysis failed.")
-  updateFileStatus()
-}
+  uploading = true
+  setInputSendingState(true)
 
-}catch(err){
+  addMessage(
+    "user",
+    `Analyzing transcript "${selectedTranscriptFile.name}" with study plan "${selectedStudyPlanFile.name}"...`,
+    { save: true }
+  )
 
-console.error(err)
-addBotMessage("Connection error with the study plan analysis service.")
-updateFileStatus()
+  const formData = new FormData()
+  formData.append("transcript", selectedTranscriptFile)
+  formData.append("study_plan", selectedStudyPlanFile)
+  formData.append("sessionId", sessionId)
+  formData.append("studentId", localStorage.getItem("studentID") || "")
+  formData.append("studentName", localStorage.getItem("studentName") || "")
 
-}finally{
-uploadingAnalysis = false
-}
+  try {
+    const res = await fetch(SUBSYSTEM_URL + "/api/analyze-study-plan", {
+      method: "POST",
+      body: formData
+    })
 
-}
+    let data = {}
+    try {
+      data = await res.json()
+    } catch {
+      data = {}
+    }
 
-/* SEND MESSAGE TO n8n */
+    if (res.ok) {
+      transcriptReady = true
+      subsystemData = data
+      localStorage.setItem("transcriptReady", "true")
+      localStorage.setItem("subsystemData", JSON.stringify(data))
 
-async function send(){
+      addMessage("assistant", "Transcript and study plan analyzed successfully.", { save: true })
 
-if(sending) return
+      if (data.summary) {
+        const summaryLines = [
+          "Summary:",
+          data.summary.completed_credits != null ? `Completed Credits: ${data.summary.completed_credits}` : null,
+          data.summary.in_progress_credits != null ? `In Progress Credits: ${data.summary.in_progress_credits}` : null,
+          data.summary.remaining_credits != null ? `Remaining Credits: ${data.summary.remaining_credits}` : null,
+          data.summary.completion_percentage != null ? `Completion: ${data.summary.completion_percentage}%` : null
+        ].filter(Boolean)
+        addMessage("assistant", summaryLines.join("\n"), { save: true })
+      }
 
-const text = input.value.trim()
-if(!text) return
+      if (data.advice) {
+        const adviceText = Array.isArray(data.advice) ? data.advice.join("\n") : String(data.advice)
+        addMessage("assistant", "Personalized Advice:\n" + adviceText, { save: true })
+      }
 
-sending = true
-sendBtn.textContent = "..."
+      if (Array.isArray(data.eligible_next_semester) && data.eligible_next_semester.length) {
+        addMessage(
+          "assistant",
+          "Eligible Next Semester:\n" + data.eligible_next_semester.join("\n"),
+          { save: true }
+        )
+      }
 
-addUserMessage(text)
-addHistory(text)
+      if (data.download_url || data.excel_file) {
+        const url = data.download_url
+          ? (String(data.download_url).startsWith("http") ? data.download_url : SUBSYSTEM_URL + data.download_url)
+          : SUBSYSTEM_URL + "/download-report/" + data.excel_file
+        addMessage("assistant", "Download Study Plan Excel:\n" + url, { save: true })
+      }
 
-input.value = ""
+      if (data.download_structured_excel_url) {
+        const structuredUrl = String(data.download_structured_excel_url).startsWith("http")
+          ? data.download_structured_excel_url
+          : SUBSYSTEM_URL + data.download_structured_excel_url
+        addMessage("assistant", "Download Structured Study Plan Excel:\n" + structuredUrl, { save: true })
+      }
 
-try{
-
-const res = await fetch(
-N8N_CHAT_URL,
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body: JSON.stringify({
-chatInput: text,
-sessionId: sessionId,
-transcriptReady: transcriptReady,
-subsystemData: subsystemData
-})
-})
-
-const data = await res.json()
-
-const reply = data.output || "Sorry, I couldn't get a response."
-addBotMessage(reply)
-
-}catch(err){
-
-console.error(err)
-addBotMessage("Connection error with the AI service.")
-
-}
-
-sendBtn.textContent="➤"
-sending=false
-
-}
-
-/* ENTER TO SEND */
-
-input.addEventListener("keydown",(e)=>{
-if(e.key==="Enter") send()
-})
-
-/* STUDENT LOGIN */
-
-function askStudent(){
-
-let name = localStorage.getItem("studentName")
-let id = localStorage.getItem("studentID")
-
-if(!name){
-
-  name = prompt("Enter your name")
-  id = prompt("Enter your student ID")
-
-  localStorage.setItem("studentName", name)
-  localStorage.setItem("studentID", id)
-}
-
-document.getElementById("studentName").textContent = name
-document.getElementById("studentID").textContent = "Student ID: " + id
-
-document.getElementById("avatarInitial").textContent = name ? name[0] : "U"
-
-currentUserId = id
-
-// create new chat every time page loads
-currentChatId = "chat_" + Date.now()
-
-chatHistory = []
-
-chats.push({
-  id: currentChatId,
-  messages: []
-})
-
-localStorage.setItem("chats", JSON.stringify(chats))
-
-messages.innerHTML = ""
-
-chatHistory.forEach(msg => {
-  if(msg.type === "user"){
-    addUserMessage(msg.text, false)
-  } else {
-    addBotMessage(msg.text, false)
+      selectedTranscriptFile = null
+      selectedStudyPlanFile = null
+      renderSelectedFiles()
+    } else {
+      addMessage("assistant", String(data.error || "Study plan analysis failed."), { save: true })
+    }
+  } catch (err) {
+    console.error(err)
+    addMessage("assistant", "Connection error with the study plan analysis service.", { save: true })
+  } finally {
+    uploading = false
+    setInputSendingState(false)
+    scrollMessagesToEnd(true)
   }
-})
-
 }
 
-/* PAGE LOAD */
-
-window.addEventListener("load",()=>{
-
-askStudent()
-addHistory()
-updateFileStatus()
-
-// ===== Show welcome ONLY if no history =====
-if(chatHistory.length === 0){
-  const welcome="Hello! I'm your UniMate Academic Advisor. How can I help you today?"
-  addBotMessage(welcome)
-}
-
+transcriptFile.addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0]
+  e.target.value = ""
+  if (!file || uploading || sending) return
+  selectedTranscriptFile = file
+  renderSelectedFiles()
+  addMessage("assistant", `Transcript selected: ${file.name}`, { save: true })
 })
 
+studyPlanFile.addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0]
+  e.target.value = ""
+  if (!file || uploading || sending) return
+  selectedStudyPlanFile = file
+  renderSelectedFiles()
+  addMessage("assistant", `Study plan selected: ${file.name}`, { save: true })
+})
+
+inputEl.addEventListener("keydown", e => {
+  if (e.key !== "Enter" || e.shiftKey) return
+  if (e.isComposing) return
+  e.preventDefault()
+  send()
+})
+
+function bootstrapChats() {
+  let chats = loadChats()
+  const storedCurrent = getStoredCurrentChatId()
+  if (!chats.length) {
+    const id = "chat_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
+    const now = Date.now()
+    chats = [{
+      id,
+      title: "New consultation",
+      createdAt: now,
+      updatedAt: now,
+      meta: { schemaVersion: SCHEMA_VERSION, messageCount: 1 },
+      messages: [{ id: newMsgId(), role: "assistant", text: WELCOME_TEXT, ts: now }]
+    }]
+    saveChats(chats)
+    setCurrentChatId(id)
+    return
+  }
+  const sorted = chats.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+  const pick =
+    storedCurrent && findChat(chats, storedCurrent)
+      ? String(storedCurrent)
+      : String(sorted[0].id)
+  setCurrentChatId(pick)
+}
+
+window.addEventListener("load", () => {
+  askStudent()
+  bootstrapChats()
+  renderHistory()
+  renderThreadFromStore()
+  renderSelectedFiles()
+})
 </script>
-
 </body>
 </html>
+
 
