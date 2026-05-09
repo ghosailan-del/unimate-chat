@@ -185,6 +185,63 @@ input{
 .user .message-meta{color:rgba(255,255,255,.85)}
 .bot-bubble .message-meta{color:#6e7d96}
 
+.theme-toggle{
+  margin-left: auto;
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  transition: 0.2s;
+}
+
+.theme-toggle:hover{
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 6px #d4af57);
+}
+
+
+body.dark{
+  background:#121826;
+}
+
+body.dark .header,
+body.dark .input-wrap{
+  background:#172033;
+  border-color:#2b3854;
+  color:#fff;
+}
+
+body.dark .messages{
+  background:#121826;
+}
+
+body.dark .bot-bubble{
+  background:#1c2740;
+  color:#fff;
+}
+
+body.dark .user{
+  background:#2e4a7f;
+}
+
+body.dark input{
+  background:#1f2a44;
+  color:#fff;
+  border-color:#34415f;
+}
+
+body.dark input::placeholder{
+  color:#aab4c8;
+}
+
+
+body.dark .theme-toggle{
+  background: transparent !important;
+  color:#fff;
+}
 </style>
 </head>
 <body>
@@ -216,6 +273,7 @@ input{
       <b>UniMate Academic Advisor</b><br>
       UPM University
     </div>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
   </div>
   <div class="messages" id="messages"></div>
   <div class="input-wrap">
@@ -994,8 +1052,25 @@ function bootstrapChats() {
       : String(sorted[0].id)
   setCurrentChatId(pick)
 }
+function applyTheme() {
+  const theme = localStorage.getItem("theme") || "light"
 
+  if (theme === "dark") {
+    document.body.classList.add("dark")
+    document.querySelector(".theme-toggle").textContent = "☀️"
+  } else {
+    document.body.classList.remove("dark")
+    document.querySelector(".theme-toggle").textContent = "🌙"
+  }
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.contains("dark")
+  localStorage.setItem("theme", isDark ? "light" : "dark")
+  applyTheme()
+}
 window.addEventListener("load", () => {
+  applyTheme()
   askStudent()
   bootstrapChats()
   renderHistory()
