@@ -58,6 +58,24 @@ body{
   gap:12px;
   align-items:center;
 }
+  .history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.delete-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.history-item:hover .delete-btn {
+  display: block;
+}
 .avatar{
   width:45px;height:45px;border-radius:50%;background:#5a6f94;
   display:flex;align-items:center;justify-content:center;font-weight:bold;
@@ -630,8 +648,26 @@ function renderHistory() {
     const time = document.createElement("span")
     time.className = "time"
     time.textContent = formatChatTime(chat.updatedAt)
-    item.appendChild(title)
-    item.appendChild(time)
+
+const left = document.createElement("div")
+left.style.display = "flex"
+left.style.flexDirection = "column"
+
+left.appendChild(title)
+left.appendChild(time)
+    
+const deleteBtn = document.createElement("button")
+deleteBtn.className = "delete-btn"
+deleteBtn.textContent = "🗑"
+deleteBtn.onclick = (e) => {
+  e.stopPropagation()
+
+  if (confirm("Are you sure you want to delete this chat?")) {
+    deleteChat(chat.id)
+  }
+}
+item.appendChild(left)
+item.appendChild(deleteBtn)
     const metaBits = [
       "Updated: " + formatChatTime(chat.updatedAt),
       "Created: " + formatChatTime(chat.createdAt),
@@ -655,7 +691,26 @@ function loadChat(chatId) {
   renderThreadFromStore()
   renderHistory()
 }
+function deleteChat(chatId) {
+  let chats = loadChats()
 
+  
+  chats = chats.filter(c => !chatIdEquals(c.id, chatId))
+
+  saveChats(chats)
+
+  if (chatIdEquals(currentChatId, chatId)) {
+    if (chats.length) {
+      setCurrentChatId(chats[0].id)
+    } else {
+      newChat()
+      return
+    }
+  }
+
+  renderHistory()
+  renderThreadFromStore()
+}
 function newChat(clearInput = true) {
   if (sending || uploading) return
   const chats = loadChats()
