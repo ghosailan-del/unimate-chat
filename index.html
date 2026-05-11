@@ -58,24 +58,6 @@ body{
   gap:12px;
   align-items:center;
 }
-  .history-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.delete-btn {
-  display: none;
-  background: none;
-  border: none;
-  color: #ff6b6b;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.history-item:hover .delete-btn {
-  display: block;
-}
 .avatar{
   width:45px;height:45px;border-radius:50%;background:#5a6f94;
   display:flex;align-items:center;justify-content:center;font-weight:bold;
@@ -185,63 +167,6 @@ input{
 .user .message-meta{color:rgba(255,255,255,.85)}
 .bot-bubble .message-meta{color:#6e7d96}
 
-.theme-toggle{
-  margin-left: auto;
-  background: transparent !important;
-  border: none;
-  box-shadow: none;
-  outline: none;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 0;
-  transition: 0.2s;
-}
-
-.theme-toggle:hover{
-  transform: scale(1.2);
-  filter: drop-shadow(0 0 6px #d4af57);
-}
-
-
-body.dark{
-  background:#121826;
-}
-
-body.dark .header,
-body.dark .input-wrap{
-  background:#172033;
-  border-color:#2b3854;
-  color:#fff;
-}
-
-body.dark .messages{
-  background:#121826;
-}
-
-body.dark .bot-bubble{
-  background:#1c2740;
-  color:#fff;
-}
-
-body.dark .user{
-  background:#2e4a7f;
-}
-
-body.dark input{
-  background:#1f2a44;
-  color:#fff;
-  border-color:#34415f;
-}
-
-body.dark input::placeholder{
-  color:#aab4c8;
-}
-
-
-body.dark .theme-toggle{
-  background: transparent !important;
-  color:#fff;
-}
 </style>
 </head>
 <body>
@@ -273,7 +198,6 @@ body.dark .theme-toggle{
       <b>UniMate Academic Advisor</b><br>
       UPM University
     </div>
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
   </div>
   <div class="messages" id="messages"></div>
   <div class="input-wrap">
@@ -706,26 +630,8 @@ function renderHistory() {
     const time = document.createElement("span")
     time.className = "time"
     time.textContent = formatChatTime(chat.updatedAt)
-
-const left = document.createElement("div")
-left.style.display = "flex"
-left.style.flexDirection = "column"
-
-left.appendChild(title)
-left.appendChild(time)
-    
-const deleteBtn = document.createElement("button")
-deleteBtn.className = "delete-btn"
-deleteBtn.textContent = "🗑"
-deleteBtn.onclick = (e) => {
-  e.stopPropagation()
-
-  if (confirm("Are you sure you want to delete this chat?")) {
-    deleteChat(chat.id)
-  }
-}
-item.appendChild(left)
-item.appendChild(deleteBtn)
+    item.appendChild(title)
+    item.appendChild(time)
     const metaBits = [
       "Updated: " + formatChatTime(chat.updatedAt),
       "Created: " + formatChatTime(chat.createdAt),
@@ -749,26 +655,7 @@ function loadChat(chatId) {
   renderThreadFromStore()
   renderHistory()
 }
-function deleteChat(chatId) {
-  let chats = loadChats()
 
-  
-  chats = chats.filter(c => !chatIdEquals(c.id, chatId))
-
-  saveChats(chats)
-
-  if (chatIdEquals(currentChatId, chatId)) {
-    if (chats.length) {
-      setCurrentChatId(chats[0].id)
-    } else {
-      newChat()
-      return
-    }
-  }
-
-  renderHistory()
-  renderThreadFromStore()
-}
 function newChat(clearInput = true) {
   if (sending || uploading) return
   const chats = loadChats()
@@ -850,44 +737,23 @@ async function send() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-  action: "sendMessage",
-  chatInput: text,
-  sessionId: sessionId,
-  transcriptReady: transcriptReady,
-  subsystemData: subsystemData
-})
+        chatInput: text,
+        sessionId: sessionId,
+        transcriptReady: transcriptReady,
+        subsystemData: subsystemData
+      })
     })
-    let rawText = ""
-let data = null
-
-try {
-  rawText = await res.text()
-  data = rawText ? JSON.parse(rawText) : null
-} catch {
-  data = null
-}
-
-removeTypingIndicator()
-
-const replyRaw =
-  (data && (data.output ?? data.text ?? data.reply ?? data.message ?? data.answer)) ??
-  (data && data.json && (data.json.output ?? data.json.text ?? data.json.reply ?? data.json.message ?? data.json.answer)) ??
-  (Array.isArray(data) && data[0] && (
-    data[0].output ??
-    data[0].text ??
-    data[0].reply ??
-    data[0].message ??
-    data[0].answer ??
-    (data[0].json && (
-      data[0].json.output ??
-      data[0].json.text ??
-      data[0].json.reply ??
-      data[0].json.message ??
-      data[0].json.answer
-    ))
-  )) ??
-  rawText ??
-  ""
+    let data = null
+    try {
+      data = await res.json()
+    } catch {
+      data = null
+    }
+    removeTypingIndicator()
+    const replyRaw =
+      (data && (data.output ?? data.text ?? data.reply)) ??
+      (Array.isArray(data) && data[0] && (data[0].output ?? data[0].text)) ??
+      ""
     const reply = String(replyRaw).trim()
     if (!res.ok || !reply) {
       addMessage("assistant", "Sorry, I couldn't get a response.", { save: true })
@@ -1073,25 +939,8 @@ function bootstrapChats() {
       : String(sorted[0].id)
   setCurrentChatId(pick)
 }
-function applyTheme() {
-  const theme = localStorage.getItem("theme") || "light"
 
-  if (theme === "dark") {
-    document.body.classList.add("dark")
-    document.querySelector(".theme-toggle").textContent = "☀️"
-  } else {
-    document.body.classList.remove("dark")
-    document.querySelector(".theme-toggle").textContent = "🌙"
-  }
-}
-
-function toggleTheme() {
-  const isDark = document.body.classList.contains("dark")
-  localStorage.setItem("theme", isDark ? "light" : "dark")
-  applyTheme()
-}
 window.addEventListener("load", () => {
-  applyTheme()
   askStudent()
   bootstrapChats()
   renderHistory()
@@ -1101,5 +950,6 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
 
 
