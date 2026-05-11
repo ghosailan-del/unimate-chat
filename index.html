@@ -737,11 +737,12 @@ async function send() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chatInput: text,
-        sessionId: sessionId,
-        transcriptReady: transcriptReady,
-        subsystemData: subsystemData
-      })
+      action: "sendMessage",
+      chatInput: text,
+      sessionId: sessionId,
+      transcriptReady: transcriptReady,
+      subsystemData: subsystemData
+     })
     })
     let data = null
     try {
