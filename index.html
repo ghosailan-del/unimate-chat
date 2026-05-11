@@ -856,17 +856,37 @@ async function send() {
         subsystemData: subsystemData
       })
     })
-    let data = null
-    try {
-      data = await res.json()
-    } catch {
-      data = null
-    }
-    removeTypingIndicator()
-    const replyRaw =
-      (data && (data.output ?? data.text ?? data.reply)) ??
-      (Array.isArray(data) && data[0] && (data[0].output ?? data[0].text)) ??
-      ""
+    let rawText = ""
+let data = null
+
+try {
+  rawText = await res.text()
+  data = rawText ? JSON.parse(rawText) : null
+} catch {
+  data = null
+}
+
+removeTypingIndicator()
+
+const replyRaw =
+  (data && (data.output ?? data.text ?? data.reply ?? data.message ?? data.answer)) ??
+  (data && data.json && (data.json.output ?? data.json.text ?? data.json.reply ?? data.json.message ?? data.json.answer)) ??
+  (Array.isArray(data) && data[0] && (
+    data[0].output ??
+    data[0].text ??
+    data[0].reply ??
+    data[0].message ??
+    data[0].answer ??
+    (data[0].json && (
+      data[0].json.output ??
+      data[0].json.text ??
+      data[0].json.reply ??
+      data[0].json.message ??
+      data[0].json.answer
+    ))
+  )) ??
+  rawText ??
+  ""
     const reply = String(replyRaw).trim()
     if (!res.ok || !reply) {
       addMessage("assistant", "Sorry, I couldn't get a response.", { save: true })
