@@ -737,12 +737,11 @@ async function send() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-      action: "sendMessage",
-      chatInput: text,
-      sessionId: sessionId,
-      transcriptReady: transcriptReady,
-      subsystemData: subsystemData
-     })
+        chatInput: text,
+        sessionId: sessionId,
+        transcriptReady: transcriptReady,
+        subsystemData: subsystemData
+      })
     })
     let data = null
     try {
@@ -951,6 +950,4 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
-
-
 
