@@ -234,6 +234,9 @@ const SS_CURRENT_CHAT = "currentChatId_ss"
 const LS_SESSION = "chat_session_id"
 const SCHEMA_VERSION = 2
 
+let currentUserType = localStorage.getItem("userType") || "guest"
+let universityUser = null
+
 function chatIdEquals(a, b) {
   return String(a) === String(b)
 }
@@ -590,6 +593,26 @@ function addMessage(role, text, { save } = { save: true }) {
   appendMessageToDom(role, t, ts)
   if (save) {
     persistMessage(chat, role, t, ts)
+
+    if (
+      currentUserType === "university" &&
+      universityUser
+    ) {
+
+      window.firebasePush(
+        window.firebaseRef(
+          window.firebaseDB,
+          "chat_logs/" + universityUser.uid
+        ),
+        {
+          role,
+          text: t,
+          timestamp: ts,
+          sessionId
+        }
+      )
+    }
+
     saveChats(chats)
     renderHistory()
   }
@@ -940,7 +963,84 @@ function bootstrapChats() {
   setCurrentChatId(pick)
 }
 
+
+
+function chooseUserType() {
+
+  const choice = confirm(
+    "Press OK if you are a university student or doctor. Press Cancel for guest mode."
+  )
+
+  if (choice) {
+    currentUserType = "university"
+    localStorage.setItem("userType", "university")
+    universityLogin()
+  } else {
+    currentUserType = "guest"
+    localStorage.setItem("userType", "guest")
+  }
+}
+
+async function universityLogin() {
+
+  const email = prompt("Enter university email")
+  const password = prompt("Enter password")
+
+  if (!email || !password) return
+
+  const studentRegex = /^(4\d{6}|2\d{8})@stu\.upm\.edu\.sa$/
+  const doctorRegex = /^[a-zA-Z._]+@upm\.edu\.sa$/
+
+  if (
+    !studentRegex.test(email) &&
+    !doctorRegex.test(email)
+  ) {
+    alert("Only university emails allowed")
+    return
+  }
+
+  try {
+
+    const userCredential =
+      await window.firebaseSignInWithEmailAndPassword(
+        window.firebaseAuth,
+        email,
+        password
+      )
+
+    universityUser = userCredential.user
+
+    alert("Logged in successfully")
+
+  } catch {
+
+    try {
+
+      const newUser =
+        await window.firebaseCreateUserWithEmailAndPassword(
+          window.firebaseAuth,
+          email,
+          password
+        )
+
+      universityUser = newUser.user
+
+      alert("Account created successfully")
+
+    } catch (err) {
+
+      alert(err.message)
+    }
+  }
+}
+
+
 window.addEventListener("load", () => {
+
+  setTimeout(() => {
+    chooseUserType()
+  }, 300)
+
   askStudent()
   bootstrapChats()
   renderHistory()
@@ -948,6 +1048,43 @@ window.addEventListener("load", () => {
   renderSelectedFiles()
 })
 </script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+
+import {
+  getDatabase,
+  ref,
+  push
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC86RTJXH_yHEwDLQdB3HAjLmYtrl4u29U",
+  authDomain: "unimate-9a5c6.firebaseapp.com",
+  databaseURL: "https://unimate-9a5c6-default-rtdb.firebaseio.com",
+  projectId: "unimate-9a5c6",
+  storageBucket: "unimate-9a5c6.firebasestorage.app",
+  messagingSenderId: "396377066556",
+  appId: "1:396377066556:web:b578546dd874fc545dc739"
+}
+
+const app = initializeApp(firebaseConfig)
+
+window.firebaseAuth = getAuth(app)
+window.firebaseDB = getDatabase(app)
+window.firebasePush = push
+window.firebaseRef = ref
+window.firebaseCreateUserWithEmailAndPassword = createUserWithEmailAndPassword
+window.firebaseSignInWithEmailAndPassword = signInWithEmailAndPassword
+</script>
+
 </body>
 </html>
+
 
