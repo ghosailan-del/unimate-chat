@@ -45,10 +45,21 @@ body{
   border-radius:10px;
   cursor:pointer;
   text-align:start;
+  position:relative;
+  padding-inline-end:38px;
 }
 .history-item.active{outline:2px solid #d4af57;outline-offset:2px}
 .history-item .title{font-size:14px;word-break:break-word}
 .history-item .time{font-size:12px;opacity:.7;display:block;margin-top:4px}
+.history-delete-btn{
+  position:absolute;top:8px;inset-inline-end:8px;
+  width:22px;height:22px;border-radius:6px;
+  border:none;background:rgba(255,255,255,.12);color:#fff;
+  font-size:13px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  opacity:.6;
+}
+.history-delete-btn:hover{opacity:1;background:rgba(214,76,76,.55)}
 .sidebar-user{
   margin-top:auto;
   background:#29456c;
@@ -166,6 +177,108 @@ input{
 }
 .user .message-meta{color:rgba(255,255,255,.85)}
 .bot-bubble .message-meta{color:#6e7d96}
+
+/* ===== Auth overlay & modals (same theme as rest of app) ===== */
+.auth-overlay{
+  position:fixed;inset:0;
+  background:rgba(20,30,48,.55);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;
+  padding:20px;
+}
+.auth-overlay.hidden{display:none}
+.auth-modal{
+  background:#fff;
+  border-radius:16px;
+  width:100%;max-width:380px;
+  padding:30px 28px;
+  box-shadow:0 10px 40px rgba(0,0,0,.2);
+}
+.auth-modal-header{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;text-align:center}
+.auth-modal-header img{width:48px}
+.auth-modal-header h2{margin:0;font-size:18px;color:#1e3555}
+.auth-modal-header p{margin:0;font-size:13px;color:#6e7d96}
+
+.auth-choice-btn{
+  width:100%;
+  display:flex;align-items:center;gap:14px;
+  background:#f3f6fb;
+  border:1px solid #d7dfec;
+  border-radius:12px;
+  padding:14px 16px;
+  cursor:pointer;
+  text-align:start;
+  font-family:inherit;
+  margin-bottom:12px;
+  transition:.15s;
+}
+.auth-choice-btn:hover{background:#e9eef8;border-color:#c3d0e6}
+.auth-choice-icon{
+  width:42px;height:42px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:#1e3555;color:#fff;font-size:20px;
+}
+.auth-choice-btn.guest .auth-choice-icon{background:#d4af57;color:#1e3555}
+.auth-choice-text b{display:block;font-size:14.5px;color:#233f73}
+.auth-choice-text span{font-size:12.5px;color:#6e7d96}
+
+.auth-form-group{margin-bottom:16px}
+.auth-form-group label{
+  display:block;font-size:13px;font-weight:bold;color:#233f73;margin-bottom:6px;
+}
+.auth-form-group input{
+  width:100%;height:48px;border-radius:10px;
+  border:1px solid #d7dfec;padding:0 14px;font-size:15px;
+}
+.auth-form-group input:focus{outline:2px solid #d4af57;outline-offset:1px;border-color:#d4af57}
+
+.auth-submit-btn{
+  width:100%;height:50px;border:none;border-radius:12px;
+  background:#d4af57;font-weight:bold;font-size:15px;cursor:pointer;
+  color:#1e3555;margin-top:4px;
+}
+.auth-submit-btn:disabled{opacity:.6;cursor:not-allowed}
+.auth-submit-btn:hover:not(:disabled){background:#c79e45}
+
+.auth-back-link{
+  background:none;border:none;color:#6e7d96;font-size:13px;
+  cursor:pointer;padding:0;margin-bottom:18px;display:flex;align-items:center;gap:4px;
+}
+.auth-back-link:hover{color:#233f73}
+
+.auth-error{
+  background:#fdecec;border:1px solid #f3b9b9;color:#a32d2d;
+  border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px;
+  display:none;
+}
+.auth-error.show{display:block}
+
+/* Student info modal (replaces double prompt()) */
+.student-info-overlay{
+  position:fixed;inset:0;
+  background:rgba(20,30,48,.55);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;padding:20px;
+}
+.student-info-overlay.hidden{display:none}
+
+/* Toast notifications (replace alert()) */
+.toast-stack{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  z-index:1100;display:flex;flex-direction:column;gap:10px;
+  width:100%;max-width:380px;padding:0 16px;
+}
+.toast{
+  background:#1e3555;color:#fff;
+  border-radius:10px;padding:13px 16px;
+  font-size:13.5px;
+  box-shadow:0 6px 20px rgba(0,0,0,.18);
+  display:flex;align-items:center;gap:10px;
+  animation:toastIn .25s ease;
+}
+.toast.success{background:#1e3555;border-left:4px solid #d4af57}
+.toast.error{background:#7a2b2b}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 
 </style>
 </head>
@@ -666,8 +779,39 @@ function renderHistory() {
     ].filter(Boolean)
     item.title = metaBits.join(" · ")
     item.onclick = () => loadChat(chat.id)
+
+    const delBtn = document.createElement("button")
+    delBtn.type = "button"
+    delBtn.className = "history-delete-btn"
+    delBtn.setAttribute("aria-label", "Delete conversation")
+    delBtn.textContent = "×"
+    delBtn.onclick = (e) => {
+      e.stopPropagation()
+      deleteChat(chat.id)
+    }
+    item.appendChild(delBtn)
+
     history.appendChild(item)
   })
+}
+
+function deleteChat(chatId) {
+  if (sending || uploading) return
+  let chats = loadChats()
+  chats = chats.filter(c => c.id !== chatId)
+  saveChats(chats)
+
+  if (chatId === currentChatId) {
+    if (chats.length) {
+      const sorted = chats.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+      setCurrentChatId(sorted[0].id)
+      renderThreadFromStore()
+    } else {
+      newChat(false)
+      return
+    }
+  }
+  renderHistory()
 }
 
 function loadChat(chatId) {
@@ -710,16 +854,33 @@ function askStudent() {
   let name = localStorage.getItem("studentName")
   let id = localStorage.getItem("studentID")
   if (!name) {
-    name = prompt("Enter your name")
-    id = prompt("Enter your student ID")
-    if (name) localStorage.setItem("studentName", name)
-    if (id) localStorage.setItem("studentID", id)
+    showStudentInfoModal()
+    return
   }
+  applyStudentInfo(name, id)
+}
+
+function applyStudentInfo(name, id) {
   document.getElementById("studentName").textContent = name || "Student"
   document.getElementById("studentID").textContent = "Student ID: " + (id || "—")
   const initials = name && name.length ? [...name.trim()][0] : "U"
   document.getElementById("avatarInitial").textContent = initials
 }
+
+function showStudentInfoModal() {
+  document.getElementById("studentInfoOverlay").classList.remove("hidden")
+  document.getElementById("studentInfoName").focus()
+}
+
+document.getElementById("studentInfoForm").addEventListener("submit", (e) => {
+  e.preventDefault()
+  const name = document.getElementById("studentInfoName").value.trim()
+  const id = document.getElementById("studentInfoId").value.trim()
+  if (name) localStorage.setItem("studentName", name)
+  if (id) localStorage.setItem("studentID", id)
+  document.getElementById("studentInfoOverlay").classList.add("hidden")
+  applyStudentInfo(name, id)
+})
 
 async function send() {
   if (sending) return
@@ -965,28 +1126,43 @@ function bootstrapChats() {
 
 
 
-function chooseUserType() {
-
-  const choice = confirm(
-    "Press OK if you are a university student or doctor. Press Cancel for guest mode."
-  )
-
-  if (choice) {
-    currentUserType = "university"
-    localStorage.setItem("userType", "university")
-    universityLogin()
-  } else {
-    currentUserType = "guest"
-    localStorage.setItem("userType", "guest")
-  }
+function showToast(message, type) {
+  const stack = document.getElementById("toastStack")
+  if (!stack) return
+  const el = document.createElement("div")
+  el.className = "toast" + (type ? " " + type : "")
+  el.textContent = message
+  stack.appendChild(el)
+  setTimeout(() => el.remove(), 3500)
 }
 
-async function universityLogin() {
+function chooseUserType() {
+  document.getElementById("userTypeOverlay").classList.remove("hidden")
+}
 
-  const email = prompt("Enter university email")
-  const password = prompt("Enter password")
+function selectGuest() {
+  document.getElementById("userTypeOverlay").classList.add("hidden")
+  currentUserType = "guest"
+  localStorage.setItem("userType", "guest")
+}
 
-  if (!email || !password) return
+function selectUniversity() {
+  document.getElementById("userTypeOverlay").classList.add("hidden")
+  document.getElementById("loginError").classList.remove("show")
+  document.getElementById("universityLoginForm").reset()
+  document.getElementById("universityLoginOverlay").classList.remove("hidden")
+  document.getElementById("loginEmail").focus()
+}
+
+function backToUserTypeChoice() {
+  document.getElementById("universityLoginOverlay").classList.add("hidden")
+  document.getElementById("userTypeOverlay").classList.remove("hidden")
+}
+
+async function universityLogin(email, password) {
+
+  const errorEl = document.getElementById("loginError")
+  errorEl.classList.remove("show")
 
   const studentRegex =  /^(4\d{6}|2\d{8})@upm\.edu\.sa$/
   const doctorRegex = /^[a-zA-Z._]+@upm\.edu\.sa$/
@@ -995,9 +1171,14 @@ async function universityLogin() {
     !studentRegex.test(email) &&
     !doctorRegex.test(email)
   ) {
-    alert("Only university emails allowed")
+    errorEl.textContent = "Only university emails allowed"
+    errorEl.classList.add("show")
     return
   }
+
+  const submitBtn = document.getElementById("loginSubmitBtn")
+  submitBtn.disabled = true
+  submitBtn.textContent = "Please wait..."
 
   try {
 
@@ -1009,8 +1190,11 @@ async function universityLogin() {
       )
 
     universityUser = userCredential.user
+    currentUserType = "university"
+    localStorage.setItem("userType", "university")
 
-    alert("Logged in successfully")
+    document.getElementById("universityLoginOverlay").classList.add("hidden")
+    showToast("Logged in successfully", "success")
 
   } catch {
 
@@ -1024,15 +1208,33 @@ async function universityLogin() {
         )
 
       universityUser = newUser.user
+      currentUserType = "university"
+      localStorage.setItem("userType", "university")
 
-      alert("Account created successfully")
+      document.getElementById("universityLoginOverlay").classList.add("hidden")
+      showToast("Account created successfully", "success")
 
     } catch (err) {
 
-      alert(err.message)
+      errorEl.textContent = err.message
+      errorEl.classList.add("show")
     }
+  } finally {
+    submitBtn.disabled = false
+    submitBtn.textContent = "Continue"
   }
 }
+
+document.getElementById("chooseUniversityBtn").addEventListener("click", selectUniversity)
+document.getElementById("chooseGuestBtn").addEventListener("click", selectGuest)
+document.getElementById("loginBackBtn").addEventListener("click", backToUserTypeChoice)
+document.getElementById("universityLoginForm").addEventListener("submit", (e) => {
+  e.preventDefault()
+  const email = document.getElementById("loginEmail").value.trim()
+  const password = document.getElementById("loginPassword").value
+  universityLogin(email, password)
+})
+
 
 
 window.addEventListener("load", () => {
@@ -1083,8 +1285,82 @@ window.firebaseRef = ref
 window.firebaseCreateUserWithEmailAndPassword = createUserWithEmailAndPassword
 window.firebaseSignInWithEmailAndPassword = signInWithEmailAndPassword
 </script>
+<!-- ===== Auth: user type choice modal ===== -->
+<div class="auth-overlay hidden" id="userTypeOverlay">
+  <div class="auth-modal">
+    <div class="auth-modal-header">
+      <img src="logo.png" alt="">
+      <h2>Welcome to UniMate</h2>
+      <p>Choose how you'd like to continue</p>
+    </div>
+    <button type="button" class="auth-choice-btn" id="chooseUniversityBtn">
+      <div class="auth-choice-icon">&#127891;</div>
+      <div class="auth-choice-text">
+        <b>University Student / Doctor</b>
+        <span>Sign in with your UPM email</span>
+      </div>
+    </button>
+    <button type="button" class="auth-choice-btn guest" id="chooseGuestBtn">
+      <div class="auth-choice-icon">&#128100;</div>
+      <div class="auth-choice-text">
+        <b>Continue as Guest</b>
+        <span>Chat without signing in</span>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- ===== Auth: university login form modal ===== -->
+<div class="auth-overlay hidden" id="universityLoginOverlay">
+  <div class="auth-modal">
+    <button type="button" class="auth-back-link" id="loginBackBtn">&#8592; Back</button>
+    <div class="auth-modal-header">
+      <img src="logo.png" alt="">
+      <h2>University Sign In</h2>
+      <p>Use your official UPM email address</p>
+    </div>
+    <div class="auth-error" id="loginError"></div>
+    <form id="universityLoginForm">
+      <div class="auth-form-group">
+        <label for="loginEmail">University Email</label>
+        <input type="email" id="loginEmail" placeholder="name@upm.edu.sa" required>
+      </div>
+      <div class="auth-form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="auth-submit-btn" id="loginSubmitBtn">Continue</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Student info modal (guest sidebar identity) ===== -->
+<div class="auth-overlay student-info-overlay hidden" id="studentInfoOverlay">
+  <div class="auth-modal">
+    <div class="auth-modal-header">
+      <img src="logo.png" alt="">
+      <h2>Tell us about you</h2>
+      <p>This helps personalize your sidebar</p>
+    </div>
+    <form id="studentInfoForm">
+      <div class="auth-form-group">
+        <label for="studentInfoName">Name</label>
+        <input type="text" id="studentInfoName" placeholder="Your name" required>
+      </div>
+      <div class="auth-form-group">
+        <label for="studentInfoId">Student ID</label>
+        <input type="text" id="studentInfoId" placeholder="Your student ID">
+      </div>
+      <button type="submit" class="auth-submit-btn">Continue</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Toast notifications ===== -->
+<div class="toast-stack" id="toastStack"></div>
 
 </body>
 </html>
+
 
 
