@@ -389,10 +389,6 @@ input{
         <label for="studentInfoName">Name</label>
         <input type="text" id="studentInfoName" placeholder="Your name" required>
       </div>
-      <div class="auth-form-group">
-        <label for="studentInfoId">Student ID</label>
-        <input type="text" id="studentInfoId" placeholder="Your student ID">
-      </div>
       <button type="submit" class="auth-submit-btn">Continue</button>
     </form>
   </div>
@@ -949,11 +945,9 @@ function showStudentInfoModal() {
 document.getElementById("studentInfoForm").addEventListener("submit", (e) => {
   e.preventDefault()
   const name = document.getElementById("studentInfoName").value.trim()
-  const id = document.getElementById("studentInfoId").value.trim()
   if (name) localStorage.setItem("studentName", name)
-  if (id) localStorage.setItem("studentID", id)
   document.getElementById("studentInfoOverlay").classList.add("hidden")
-  applyStudentInfo(name, id)
+  applyStudentInfo(name, localStorage.getItem("studentID"))
 })
 
 async function send() {
@@ -1255,6 +1249,12 @@ async function universityLogin(email, password) {
   submitBtn.disabled = true
   submitBtn.textContent = "Please wait..."
 
+  if (!window.firebaseReady) {
+    await new Promise(resolve => {
+      document.addEventListener("firebase-ready", resolve, { once: true })
+    })
+  }
+
   try {
 
     const userCredential =
@@ -1359,13 +1359,12 @@ window.firebasePush = push
 window.firebaseRef = ref
 window.firebaseCreateUserWithEmailAndPassword = createUserWithEmailAndPassword
 window.firebaseSignInWithEmailAndPassword = signInWithEmailAndPassword
+
+window.firebaseReady = true
+document.dispatchEvent(new Event("firebase-ready"))
 </script>
 
 </body>
 </html>
-
-
-
-
 
 
